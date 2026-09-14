@@ -1,26 +1,50 @@
 @import "tailwindcss";
 
+/*
+ * Aurora design tokens — source of truth: docs/design/BRAND.md §3 (v2.0)
+ * and packages/ui-tokens. Dark is default; light mode via [data-theme="light"].
+ * Roles: gold = earned (never a button) · aurora = offered (never a reward).
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --night-950: #06100c;
+  --night-900: #0b1a13;
+  --night-800: #16281f;
+  --star-100: #edf5ee;
+  --star-400: #8fa89a;
+  --aurora-400: #34d98c;
+  --aurora-600: #0e7a55;
+  --gold-400: #f2c14e;
+  --ink-900: #0f1d17;
+}
+
+[data-theme="light"] {
+  --night-950: #f7f5ef;
+  --night-900: #ffffff;
+  --night-800: #e3e0d6;
+  --star-100: #0f1d17;
+  --star-400: #4a5a50;
+  --aurora-400: #0e7a55;
+  --aurora-600: #34d98c;
+  --gold-400: #f2c14e;
+  --ink-900: #f7f5ef;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-night-950: var(--night-950);
+  --color-night-900: var(--night-900);
+  --color-night-800: var(--night-800);
+  --color-star-100: var(--star-100);
+  --color-star-400: var(--star-400);
+  --color-aurora-400: var(--aurora-400);
+  --color-aurora-600: var(--aurora-600);
+  --color-gold-400: var(--gold-400);
+  --color-ink-900: var(--ink-900);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--night-950);
+  color: var(--star-100);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
