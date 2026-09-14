@@ -7,6 +7,7 @@ import { getSession } from "@/lib/session";
 import { WaypathMark } from "../../components/waypath-mark";
 import { MapGraph, type GraphNode, type NodeState } from "./map-graph";
 import { MapViewSwitcher } from "./map-view-switcher";
+import { PublishButton } from "./publish-button";
 
 export const dynamic = "force-dynamic";
 
@@ -66,14 +67,19 @@ export default async function MapPage({ params }: { params: Promise<{ slug: stri
             {masteredCount}/{map.nodes.length} stars mastered
           </p>
         </div>
-        {next && (
-          <Link
-            href={`/maps/${map.slug}/${next.slug}`}
-            className="rounded-xl bg-aurora-400 px-6 py-3 font-semibold text-ink-900"
-          >
-            {masteredCount === 0 ? "Start traveling" : "Continue"} → {next.title}
-          </Link>
-        )}
+        <div className="flex flex-col items-end gap-3">
+          {map.creatorId === session.user.id && (
+            <PublishButton mapId={map.id} slug={map.slug} visibility={map.visibility} />
+          )}
+          {next && (
+            <Link
+              href={`/maps/${map.slug}/${next.slug}`}
+              className="rounded-xl bg-aurora-400 px-6 py-3 font-semibold text-ink-900"
+            >
+              {masteredCount === 0 ? "Start traveling" : "Continue"} → {next.title}
+            </Link>
+          )}
+        </div>
       </header>
 
       <section className="mt-8">
