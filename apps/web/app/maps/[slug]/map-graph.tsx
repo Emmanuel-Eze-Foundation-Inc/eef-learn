@@ -42,10 +42,12 @@ export function MapGraph({
   mapSlug,
   nodes,
   edges,
+  onSelect,
 }: {
   mapSlug: string;
   nodes: GraphNode[];
   edges: GraphEdge[];
+  onSelect?: (slug: string) => void;
 }) {
   const pos = layoutNodes(nodes);
   const byId = new Map(nodes.map((n) => [n.id, n]));
@@ -126,14 +128,33 @@ export function MapGraph({
             </g>
           );
           return interactive ? (
-            <Link
-              key={n.id}
-              href={`/maps/${mapSlug}/${n.slug}`}
-              aria-label={`${n.title} — ${s.label}`}
-              className="focus:outline-none [&:focus_circle]:stroke-aurora-400"
-            >
-              {circle}
-            </Link>
+            onSelect ? (
+              <g
+                key={n.id}
+                role="button"
+                tabIndex={0}
+                aria-label={`${n.title} — ${s.label}`}
+                className="cursor-pointer focus:outline-none"
+                onClick={() => onSelect(n.slug)}
+                onKeyDown={(ev) => {
+                  if (ev.key === "Enter" || ev.key === " ") {
+                    ev.preventDefault();
+                    onSelect(n.slug);
+                  }
+                }}
+              >
+                {circle}
+              </g>
+            ) : (
+              <Link
+                key={n.id}
+                href={`/maps/${mapSlug}/${n.slug}`}
+                aria-label={`${n.title} — ${s.label}`}
+                className="focus:outline-none [&:focus_circle]:stroke-aurora-400"
+              >
+                {circle}
+              </Link>
+            )
           ) : (
             <g key={n.id} aria-label={`${n.title} — locked`}>
               {circle}
