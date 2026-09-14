@@ -14,6 +14,7 @@ from eef_ai import worker
 from eef_ai.db import close_pool, get_pool
 from eef_ai.pipelines import section, skeleton  # noqa: F401 — registers job handlers
 from eef_ai.providers import mock
+from eef_ai.providers.base import get_provider
 from eef_ai.settings import Settings, load_settings
 
 settings: Settings = load_settings()
@@ -53,6 +54,20 @@ def health() -> dict:
         "model": settings.ai_model,
         "embeddings_dimensions": settings.embeddings_dimensions,
     }
+
+
+@app.post("/chat", dependencies=[Depends(require_service_token)])
+async def chat(payload: dict) -> dict:
+    """Companion chat (ticket T12). Interactive path — no job queue.
+
+    payload: {"messages": [{"role", "content"}, ...]} — web owns quota + persistence.
+    """
+    messages = payload.get("messages")
+    if not isinstance(messages, list) or not messages:
+        raise HTTPException(status_code=422, detail="messages[] is required")
+    provider = get_provider(settings)
+    reply = await provider.chat(messages)
+    return {"reply": reply, "model": settings.model_for("chat")}
 
 
 @app.post("/dev/mock-skeleton", dependencies=[Depends(require_service_token)])

@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 
 import { WaypathMark } from "../../../components/waypath-mark";
+import { CompanionDock } from "./companion-dock";
 import { SectionClient } from "./section-client";
 
 export const dynamic = "force-dynamic";
@@ -37,6 +38,19 @@ export default async function SectionPage({
   const idx = map.nodes.findIndex((n) => n.id === node.id);
   const nextNode = map.nodes[idx + 1] ?? null;
   const isCreator = map.creatorId === session.user.id;
+
+  const [masteredCount, thread] = await Promise.all([
+    prisma.progress.count({ where: { userId: session.user.id, mapId: map.id, mastered: true } }),
+    prisma.companionThread.findFirst({
+      where: { userId: session.user.id, mapId: map.id },
+      include: { messages: { orderBy: { createdAt: "asc" }, take: 30 } },
+    }),
+  ]);
+  const firstName = (session.user.name || "friend").split(" ")[0];
+  const greeting =
+    masteredCount === 0
+      ? `Hey ${firstName} — I'm here while you travel "${map.title}". Ask me anything about ${node.title}.`
+      : `Welcome back, ${firstName}. ${masteredCount} star${masteredCount === 1 ? "" : "s"} down on "${map.title}" — you're at ${node.title}. What can I untangle for you?`;
 
   return (
     <main className="min-h-screen bg-night-950 text-star-100">
@@ -90,6 +104,16 @@ export default async function SectionPage({
           nextNodeSlug={nextNode?.slug ?? null}
         />
       </article>
+
+      <CompanionDock
+        mapId={map.id}
+        nodeId={node.id}
+        greeting={greeting}
+        initialMessages={(thread?.messages ?? []).map((m) => ({
+          role: m.role,
+          content: m.content,
+        }))}
+      />
     </main>
   );
 }
