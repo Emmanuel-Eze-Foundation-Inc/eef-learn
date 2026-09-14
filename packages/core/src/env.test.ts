@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { loadWebEnv, modelFor } from "./env.js";
+import { loadWebEnv, modelFor } from "./env";
 
 const base = {
   DATABASE_URL: "postgresql://eef:eef@localhost:5432/eef_learn",

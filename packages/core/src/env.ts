@@ -36,6 +36,9 @@ export const webEnvSchema = aiProviderEnvSchema.extend({
     message: `AUTH_SECRET must be >=16 chars. fix: \`openssl rand -hex 32\`. docs: ${DOCS}#auth`,
   }),
   AUTH_EMAIL_VERIFICATION: z.enum(["on", "off"]).default("on"),
+  AUTH_URL: z.string().url().default("http://localhost:3000"),
+  SMTP_URL: z.string().optional(), // e.g. smtp://localhost:1025 (Mailpit); unset = log links to console
+  EMAIL_FROM: z.string().default("EEF Learn <no-reply@eeflearn.local>"),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
 });
