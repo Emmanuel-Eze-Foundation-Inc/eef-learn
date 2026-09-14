@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 
 import { WaypathMark } from "../../components/waypath-mark";
+import { CoffeeChatCard } from "./coffee-chat-card";
 import { MapGraph, type GraphNode, type NodeState } from "./map-graph";
 import { MapViewSwitcher } from "./map-view-switcher";
 import { PublishButton } from "./publish-button";
@@ -45,6 +46,13 @@ export default async function MapPage({ params }: { params: Promise<{ slug: stri
   const masteredCount = masteredIds.size;
   const next = nodes.find((n) => n.state === "in_progress") ?? nodes.find((n) => n.state === "available");
 
+  const mapComplete = map.nodes.length > 0 && masteredCount === map.nodes.length;
+  const openChatRequest = mapComplete
+    ? await prisma.coffeeChatRequest.findFirst({
+        where: { userId: session.user.id, mapId: map.id, status: "open" },
+      })
+    : null;
+
   return (
     <main className="min-h-screen bg-night-950 px-8 py-6 text-star-100 lg:px-16">
       <nav className="flex items-center justify-between">
@@ -81,6 +89,14 @@ export default async function MapPage({ params }: { params: Promise<{ slug: stri
           )}
         </div>
       </header>
+
+      {mapComplete && (
+        <CoffeeChatCard
+          mapId={map.id}
+          mapTitle={map.title}
+          alreadyRequested={Boolean(openChatRequest)}
+        />
+      )}
 
       <section className="mt-8">
         <MapViewSwitcher
