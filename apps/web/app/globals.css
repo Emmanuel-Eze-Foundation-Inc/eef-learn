@@ -17,6 +17,238 @@
   --ink-900: #0f1d17;
   --ember-300: #fda4af;
   --ember-500: #e11d48;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ignite {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes mark-earn {
+  0% {
+    opacity: 0.55;
+    transform: scale(0.78);
+    filter: drop-shadow(0 0 0 rgba(242, 193, 78, 0));
+  }
+  42% {
+    opacity: 1;
+    transform: scale(1.18);
+    filter: drop-shadow(0 0 16px rgba(242, 193, 78, 0.9));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 8px rgba(242, 193, 78, 0.5));
+  }
+}
+
+@keyframes socket-earn {
+  0% {
+    filter: drop-shadow(0 0 0 rgba(242, 193, 78, 0));
+  }
+  40% {
+    filter: drop-shadow(0 0 14px rgba(242, 193, 78, 0.85));
+  }
+  100% {
+    filter: drop-shadow(0 0 6px rgba(242, 193, 78, 0.4));
+  }
+}
+
+@keyframes complete-scrim {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sky-bloom {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+  45% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+  100% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(1.28);
+  }
+}
+
+@keyframes star-ignite {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+}
+
+@keyframes complete-card {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ad-arrive {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes aurora-halo {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes read-on {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(7px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes arrive {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes ignite {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes mark-earn {
+    from {
+      opacity: 0.7;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes socket-earn {
+    from {
+      filter: none;
+    }
+    to {
+      filter: none;
+    }
+  }
+  @keyframes sky-bloom {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 0.4;
+    }
+  }
+  @keyframes star-ignite {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 0.9;
+    }
+  }
+  @keyframes complete-card {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes ad-arrive {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes aurora-halo {
+    from {
+      opacity: 0.5;
+    }
+    to {
+      opacity: 0.5;
+    }
+  }
+  @keyframes read-on {
+    from {
+      opacity: 0.8;
+    }
+    to {
+      opacity: 0.8;
+    }
+  }
+  @keyframes complete-scrim {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 }
 
 [data-theme="light"] {
@@ -31,6 +263,28 @@
   --ink-900: #f7f5ef;
   --ember-300: #9f1239;
   --ember-500: #e11d48;
+}
+
+[data-theme="dark"] {
+  --night-950: #06100c;
+  --night-900: #0b1a13;
+  --night-800: #16281f;
+  --star-100: #edf5ee;
+  --star-400: #8fa89a;
+  --aurora-400: #34d98c;
+  --aurora-600: #0e7a55;
+  --gold-400: #f2c14e;
+  --ink-900: #0f1d17;
+  --ember-300: #fda4af;
+  --ember-500: #e11d48;
+}
+
+[data-foundation] {
+  font-family: var(--font-outfit), var(--font-geist-sans), system-ui, sans-serif;
+}
+
+[data-foundation] .font-mono {
+  font-family: var(--font-jetbrains), var(--font-geist-mono), ui-monospace, monospace;
 }
 
 @theme inline {
@@ -49,8 +303,21 @@
   --font-mono: var(--font-geist-mono);
 }
 
+[data-travel-panel] {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+[data-travel-panel]::-webkit-scrollbar {
+  display: none;
+}
+
 body {
   background: var(--night-950);
   color: var(--star-100);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+::selection {
+  background: var(--aurora-400);
+  color: var(--ink-900);
 }

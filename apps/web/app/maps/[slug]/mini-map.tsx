@@ -1,128 +1,155 @@
 "use client";
 
-import { layoutNodes, type GraphEdge, type GraphNode } from "./map-graph";
+import { useMemo, useState } from "react";
 
-const STYLE: Record<GraphNode["state"], { fill: string; stroke: string }> = {
-  mastered: { fill: "var(--gold-400)", stroke: "var(--gold-400)" },
-  in_progress: { fill: "var(--night-900)", stroke: "var(--aurora-400)" },
-  available: { fill: "var(--night-900)", stroke: "var(--star-400)" },
-  locked: { fill: "var(--night-950)", stroke: "var(--night-800)" },
-};
+import { ContentMark, contentKind, kindCaption } from "./content-mark";
+import { blockKindLabel } from "./content-media";
+import type { Beat } from "./travel-types";
 
-/** Side skeleton — jump between stages without leaving the 3D world. */
+type Pt = { x: number; y: number };
+
+function plot(i: number, n: number, w: number, h: number, depth: number): Pt {
+  const t = n <= 1 ? 0 : i / (n - 1);
+  return {
+    x: w * 0.34 + Math.sin(i * 0.78) * (w * 0.22) + Math.min(depth, 3) * 16,
+    y: 18 + t * (h - 36),
+  };
+}
+
+function beatTitle(beat: Beat): string {
+  return beat.block?.title ?? beat.nodeTitle;
+}
+
+function beatBlurb(beat: Beat): string {
+  const type = beat.block?.type ?? "";
+  if (type === "flashcard" || type === "quiz") {
+    return `${kindCaption(contentKind(type))} · ${beat.nodeTitle}`;
+  }
+  const body = beat.block?.body?.replace(/\s+/g, " ").trim() ?? "";
+  if (body.length > 8) return body.slice(0, 120);
+  return beat.nodeTitle;
+}
+
+/**
+ * A map of content, not a list of stars. Hover to feel a stop;
+ * click to enter it. "See the map" opens the world overview.
+ */
 export function MiniMap({
-  nodes,
-  edges,
+  beats,
   activeIndex,
+  overview,
+  masteredIds,
   onJump,
+  onToggleOverview,
 }: {
-  nodes: GraphNode[];
-  edges: GraphEdge[];
+  beats: Beat[];
   activeIndex: number;
+  overview: boolean;
+  masteredIds: Set<string>;
   onJump: (index: number) => void;
+  onToggleOverview: () => void;
 }) {
-  const pos = layoutNodes(nodes);
-  const byId = new Map(nodes.map((n) => [n.id, n]));
-  const width = Math.max(220, 40 + nodes.length * 52);
-  const behind = Math.max(0, activeIndex);
-  const ahead = Math.max(0, nodes.length - 1 - activeIndex);
+  const [hover, setHover] = useState<number | null>(null);
+  const w = 184;
+  const h = Math.max(168, 36 + beats.length * 24);
+  const depthByNode = useMemo(() => {
+    const parent = new Map(beats.map((b) => [b.nodeId, b.parentId]));
+    const cache = new Map<string, number>();
+    const depthOf = (id: string): number => {
+      if (cache.has(id)) return cache.get(id)!;
+      const p = parent.get(id);
+      const d = p ? depthOf(p) + 1 : 0;
+      cache.set(id, d);
+      return d;
+    };
+    return new Map(beats.map((b) => [b.nodeId, depthOf(b.nodeId)]));
+  }, [beats]);
+  const pts = useMemo(
+    () => beats.map((beat, i) => plot(i, beats.length, w, h, depthByNode.get(beat.nodeId) ?? 0)),
+    [beats, depthByNode, h, w],
+  );
+  const d = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+  const shown = hover ?? (overview ? null : activeIndex);
+  const tip = shown != null ? beats[shown] : null;
 
   return (
-    <aside
-      className="pointer-events-auto w-[220px] rounded-2xl border border-night-800/80 bg-night-950/70 p-4 backdrop-blur-md"
-      aria-label="Map skeleton"
-    >
-      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-star-400">
-        Star {activeIndex + 1} of {nodes.length}
+    <nav className="pointer-events-auto w-[11.5rem]" aria-label="Learning map">
+      <button
+        type="button"
+        onClick={onToggleOverview}
+        className={`w-full rounded-xl px-3 py-2 text-left font-mono text-[10px] uppercase tracking-[0.14em] ${
+          overview ? "bg-aurora-400/15 text-aurora-400" : "text-star-400 hover:bg-night-900/80 hover:text-star-100"
+        }`}
+      >
+        {overview ? "Close map" : "See the map"}
+      </button>
+      <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.12em] text-star-400">
+        {activeIndex + 1} of {beats.length}
       </p>
-      <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-star-400">
-        {behind} behind · {ahead} ahead
-      </p>
-      <div className="mt-3 overflow-x-auto">
-        <svg
-          viewBox={`0 0 ${width} 88`}
-          width={width}
-          height={88}
-          role="list"
-          aria-label="Jump to a star"
-        >
-          {edges.map((e) => {
-            const a = pos.get(e.fromId);
-            const b = pos.get(e.toId);
-            if (!a || !b) return null;
-            const traveled = byId.get(e.fromId)?.state === "mastered";
-            const sx = (p: { x: number; y: number }) => 16 + (p.x / (90 + nodes.length * 170)) * (width - 32);
-            const sy = (p: { y: number }) => 20 + ((p.y - 110) / 180) * 48;
-            return (
-              <line
-                key={`${e.fromId}-${e.toId}`}
-                x1={sx(a)}
-                y1={sy(a)}
-                x2={sx(b)}
-                y2={sy(b)}
-                stroke={traveled ? "var(--gold-400)" : "var(--aurora-400)"}
-                strokeOpacity={traveled ? 0.95 : 0.4}
-                strokeWidth={traveled ? 2 : 1.25}
-                strokeDasharray={traveled ? undefined : "3 4"}
-              />
-            );
-          })}
-          {nodes.map((n, i) => {
-            const p = pos.get(n.id)!;
-            const s = STYLE[n.state];
-            const sx = 16 + (p.x / (90 + nodes.length * 170)) * (width - 32);
-            const sy = 20 + ((p.y - 110) / 180) * 48;
-            const locked = n.state === "locked";
-            const current = i === activeIndex;
-            return (
-              <g key={n.id} role="listitem">
-                {current && (
-                  <circle cx={sx} cy={sy} r={11} fill="var(--aurora-400)" opacity={0.22} />
-                )}
-                <circle
-                  cx={sx}
-                  cy={sy}
-                  r={6}
-                  fill={s.fill}
-                  stroke={current ? "var(--aurora-400)" : s.stroke}
-                  strokeWidth={current ? 2.5 : 1.75}
-                  className={locked ? "cursor-not-allowed" : "cursor-pointer"}
-                  onClick={() => {
-                    if (!locked) onJump(i);
-                  }}
-                  aria-label={locked ? `${n.title}, locked` : `Jump to ${n.title}`}
-                  role="button"
-                  tabIndex={locked ? -1 : 0}
-                  onKeyDown={(ev) => {
-                    if (!locked && (ev.key === "Enter" || ev.key === " ")) {
-                      ev.preventDefault();
-                      onJump(i);
-                    }
-                  }}
-                />
-              </g>
-            );
-          })}
+
+      <div className="relative mt-3" style={{ width: w, height: h }}>
+        <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} className="absolute inset-0" aria-hidden="true">
+          <path d={d} fill="none" stroke="var(--aurora-400)" strokeOpacity="0.35" strokeWidth="1.5" />
         </svg>
-      </div>
-      <ol className="mt-2 space-y-1">
-        {nodes.map((n, i) => (
-          <li key={n.id}>
+        {beats.map((beat, i) => {
+          const p = pts[i];
+          const kind = contentKind(beat.block?.type);
+          const current = i === activeIndex && !overview;
+          const mastered = masteredIds.has(beat.nodeId);
+          const locked = beat.nodeState === "locked";
+          const hot = hover === i;
+          return (
             <button
+              key={beat.id}
               type="button"
-              disabled={n.state === "locked"}
+              disabled={locked}
+              onMouseEnter={() => setHover(i)}
+              onMouseLeave={() => setHover(null)}
+              onFocus={() => setHover(i)}
+              onBlur={() => setHover(null)}
               onClick={() => onJump(i)}
-              className={`flex w-full items-center gap-2 rounded-lg px-1.5 py-1 text-left text-xs disabled:cursor-not-allowed disabled:opacity-40 ${
-                i === activeIndex ? "text-aurora-400" : "text-star-400 hover:text-star-100"
-              }`}
+              className="absolute grid place-items-center disabled:cursor-not-allowed disabled:opacity-40"
+              style={{
+                left: `${Math.round(p.x)}px`,
+                top: `${Math.round(p.y)}px`,
+                width: "28px",
+                height: "28px",
+                transform: `translate(-50%, -50%) scale(${hot ? 1.18 : current ? 1.08 : 1})`,
+                transition: "transform 160ms var(--ease-out)",
+              }}
+              aria-current={current ? "true" : undefined}
+              aria-label={
+                locked
+                  ? `${beatTitle(beat)}, locked`
+                  : `${blockKindLabel(beat.block?.type ?? "ai_text")}: ${beatTitle(beat)}`
+              }
             >
-              <span className="font-mono w-4 text-right">{i + 1}</span>
-              <span className="truncate">{n.title}</span>
-              {n.state === "mastered" && <span className="ml-auto text-gold-400">★</span>}
+              <span
+                className="grid h-7 w-7 place-items-center rounded-full"
+                style={{
+                  background: "var(--night-950)",
+                  boxShadow: hot || current ? "0 0 0 1px var(--aurora-400)" : "0 0 0 1px transparent",
+                }}
+              >
+                <ContentMark kind={kind} mastered={mastered} current={current || hot} size={18} />
+              </span>
             </button>
-          </li>
-        ))}
-      </ol>
-    </aside>
+          );
+        })}
+      </div>
+
+      {tip && (
+        <div
+          className="mt-3 rounded-xl bg-night-900/90 px-3 py-2.5 motion-safe:animate-[arrive_160ms_var(--ease-out)_both]"
+          role="status"
+        >
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-aurora-400">
+            {kindCaption(contentKind(tip.block?.type))}
+          </p>
+          <p className="mt-1 text-xs font-medium leading-snug text-star-100">{beatTitle(tip)}</p>
+          <p className="mt-1 line-clamp-3 text-[11px] leading-relaxed text-star-400">{beatBlurb(tip)}</p>
+        </div>
+      )}
+    </nav>
   );
 }

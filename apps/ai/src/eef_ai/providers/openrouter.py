@@ -16,13 +16,15 @@ from eef_ai.settings import Settings
 DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
 
 SKELETON_PROMPT = """You are a curriculum designer. Build a learning map for the topic: {topic}
+{brief}
 
 Return ONLY a JSON object with this exact shape (no markdown fences, no prose):
-{{"nodes": [{{"slug": "kebab-case-id", "title": "Human title", "order": 0}}],
+{{"nodes": [{{"slug": "kebab-case-id", "title": "Human title", "order": 0, "parent": null}}],
   "edges": [{{"from": "slug-a", "to": "slug-b", "kind": "prerequisite"}}]}}
 
-Rules: 4-9 nodes; slugs kebab-case and unique; edges form a DAG of prerequisites;
-order is the recommended travel order starting at 0."""
+Rules: 4-12 nodes; slugs kebab-case and unique; 1-2 nesting levels via parent (slug of
+the parent node, or null for roots); sibling order starts at 0 under each parent;
+edges are a DAG of prerequisites only (what must come first), not the parent tree."""
 
 SECTION_PROMPT = """Write a focused lesson for the learning-map node "{node_title}"
 (topic: {topic}). 3-6 short paragraphs, markdown, factual, cite claims inline as
@@ -36,10 +38,11 @@ def _extract_json(text: str) -> dict[str, Any]:
 
 
 class OpenRouterProvider:
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings, api_key: str | None = None):
         self.settings = settings
         self.base_url = settings.ai_base_url or DEFAULT_BASE_URL
-        self.headers = {"Authorization": f"Bearer {settings.ai_api_key}"}
+        token = api_key or settings.ai_api_key
+        self.headers = {"Authorization": f"Bearer {token}"}
 
     async def _complete(self, model: str, prompt: str, max_tokens: int = 4000) -> str:
         async with httpx.AsyncClient(timeout=120) as client:
@@ -55,9 +58,14 @@ class OpenRouterProvider:
             resp.raise_for_status()
             return resp.json()["choices"][0]["message"]["content"]
 
-    async def map_skeleton(self, topic: str) -> dict[str, Any]:
+    async def map_skeleton(self, topic: str, brief: dict[str, Any] | None = None) -> dict[str, Any]:
         model = self.settings.model_for("skeleton")
-        raw = await self._complete(model, SKELETON_PROMPT.format(topic=topic))
+        brief_lines = ""
+        if brief:
+            parts = [f"{k}: {v}" for k, v in brief.items() if v]
+            if parts:
+                brief_lines = "Creator notes:\n" + "\n".join(f"- {p}" for p in parts)
+        raw = await self._complete(model, SKELETON_PROMPT.format(topic=topic, brief=brief_lines))
         data = _extract_json(raw)
         data["topic"] = topic
         return data

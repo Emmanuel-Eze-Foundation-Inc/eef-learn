@@ -8,6 +8,7 @@ export type GraphNode = {
   slug: string;
   title: string;
   order: number;
+  parentId?: string | null;
   state: NodeState;
 };
 

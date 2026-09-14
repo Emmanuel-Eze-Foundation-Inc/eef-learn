@@ -13,21 +13,33 @@ def _seed(text: str) -> int:
     return int(hashlib.sha256(text.encode()).hexdigest()[:8], 16)
 
 
-def generate_map_skeleton(topic: str) -> dict[str, Any]:
-    """Return a small deterministic DAG for any topic."""
+def generate_map_skeleton(topic: str, brief: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Return a small deterministic nested DAG for any topic."""
     slug = topic.lower().strip().replace(" ", "-")[:40] or "topic"
     nodes = [
         {"slug": f"{slug}-foundations", "title": f"{topic}: Foundations", "order": 0},
         {"slug": f"{slug}-core-ideas", "title": f"{topic}: Core ideas", "order": 1},
+        {
+            "slug": f"{slug}-core-watch",
+            "title": f"{topic}: Watch the idea",
+            "order": 0,
+            "parent": f"{slug}-core-ideas",
+        },
+        {
+            "slug": f"{slug}-core-try",
+            "title": f"{topic}: Try it",
+            "order": 1,
+            "parent": f"{slug}-core-ideas",
+        },
         {"slug": f"{slug}-practice", "title": f"{topic}: Practice", "order": 2},
         {"slug": f"{slug}-next-star", "title": f"{topic}: The next star", "order": 3},
     ]
     edges = [
         {"from": nodes[0]["slug"], "to": nodes[1]["slug"], "kind": "prerequisite"},
-        {"from": nodes[1]["slug"], "to": nodes[2]["slug"], "kind": "prerequisite"},
-        {"from": nodes[2]["slug"], "to": nodes[3]["slug"], "kind": "prerequisite"},
+        {"from": nodes[3]["slug"], "to": nodes[4]["slug"], "kind": "prerequisite"},
+        {"from": nodes[4]["slug"], "to": nodes[5]["slug"], "kind": "prerequisite"},
     ]
-    return {"topic": topic, "seed": _seed(topic), "nodes": nodes, "edges": edges}
+    return {"topic": topic, "brief": brief or {}, "seed": _seed(topic), "nodes": nodes, "edges": edges}
 
 
 def generate_section_text(node_slug: str) -> dict[str, Any]:

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { env } from "@/lib/env";
 import { consumeQuota } from "@/lib/quota";
 import { getSession } from "@/lib/session";
+import { getUserApiKey } from "@/lib/user-ai-key";
 
 const bodySchema = z.object({
   mapId: z.string().min(1),
@@ -77,6 +78,7 @@ export async function POST(req: Request) {
       Authorization: `Bearer ${env.AI_SERVICE_TOKEN}`,
     },
     body: JSON.stringify({
+      userApiKey: await getUserApiKey(session.user.id),
       messages: [
         { role: "system", content: system },
         ...history.map((m) => ({ role: m.role, content: m.content })),

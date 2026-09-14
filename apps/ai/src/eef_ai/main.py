@@ -65,7 +65,7 @@ async def chat(payload: dict) -> dict:
     messages = payload.get("messages")
     if not isinstance(messages, list) or not messages:
         raise HTTPException(status_code=422, detail="messages[] is required")
-    provider = get_provider(settings)
+    provider = get_provider(settings, payload.get("userApiKey") if isinstance(payload.get("userApiKey"), str) else None)
     reply = await provider.chat(messages)
     return {"reply": reply, "model": settings.model_for("chat")}
 

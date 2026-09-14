@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     },
   });
 
-  // map completion check (feeds T13 coffee-chat moment)
+  // map completion check (feeds the completion overlay)
   const [nodeCount, masteredCount] = await Promise.all([
     prisma.node.count({ where: { mapId: node.mapId } }),
     prisma.progress.count({ where: { userId: session.user.id, mapId: node.mapId, mastered: true } }),

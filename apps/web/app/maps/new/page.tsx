@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 
+import { env } from "@/lib/env";
 import { getSession } from "@/lib/session";
+import { userHasApiKey } from "@/lib/user-ai-key";
 
 import { NewMapForm } from "./new-map-form";
 
@@ -20,5 +22,11 @@ export default async function NewMapPage({
       : "/maps/new";
     redirect(`/sign-in?next=${encodeURIComponent(next)}`);
   }
-  return <NewMapForm defaultTopic={defaultTopic} />;
+  return (
+    <NewMapForm
+      defaultTopic={defaultTopic}
+      hasKey={await userHasApiKey(session.user.id)}
+      mock={env.AI_PROVIDER === "mock"}
+    />
+  );
 }

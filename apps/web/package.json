@@ -14,6 +14,7 @@
     "@eef/db": "workspace:*",
     "@eef/ui-tokens": "workspace:*",
     "@paralleldrive/cuid2": "^3.3.0",
+    "@phosphor-icons/react": "^2.1.10",
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "^9.7.0",
     "better-auth": "^1.7.4",

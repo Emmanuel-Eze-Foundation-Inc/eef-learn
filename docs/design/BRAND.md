@@ -20,12 +20,12 @@ The green-and-gold pairing is also a quiet nod to the foundation's Nigerian root
 
 ## 2. Logo system
 
-**Mark: the Waypath.** Four nodes joined by an ascending polyline; the first three are small filled dots, the terminal node is a four-point star (the next star, lit). Drawn as a single stroke it reads as a route on a map; in negative space the rising line forms an implicit upward arrow.
+**Mark: one gold four-point north star, two jobs.** Canonical files: EEF CNS `Brand/` and `apps/web/public/brand/`. Figma: [EEF + EEF Learn — Logo Redesign](https://www.figma.com/design/rlBtoejgUdIm22d0CEUrZj) (Foundation, Learn, [05 Lockups](https://www.figma.com/design/rlBtoejgUdIm22d0CEUrZj/EEF---EEF-Learn-%E2%80%94-Logo-Redesign?node-id=2-6)).
 
-- Construction: nodes sit on a 4×4 grid at (0,3), (1,2), (2,2.4), (3.2,0.8); stroke = 1 grid unit at icon sizes; terminal star = 1.6× node diameter.
-- Variants: icon (mark only, app icon / favicon), horizontal lockup (mark + "EEF Learn"), stacked lockup, foundation lockup (mark + "EEF Learn" + "by Emmanuel Eze Foundation" in mono small caps).
-- Color: path renders in Star White on dark, Ink on light; ONLY the terminal star may take Gold. Never multicolor.
-- Clear space: one node diameter on all sides. Minimum size: 16px icon, 96px horizontal lockup.
+- **EEF (foundation) — the Badge:** gold star in an emerald rounded square (`#0E7A55`) with an aurora ring. This is the website mark and the social profile picture. Lockups: badge + “Emmanuel Eze / FOUNDATION”, or badge + **EEF** (short). Night wordmarks are star-white; day lockups are ink. The badge stays green on both.
+- **EEF Learn — the Waypath:** three nodes on a rising polyline; the gold star is the same mark as EEF. Path is never gold (`currentColor`: Star White on night, Ink on day). Lockup: waypath + **EEF Learn**. Footer adds “by Emmanuel Eze Foundation” in mono.
+- Social avatars are **circular** crops with the letters **EEF** in the picture (emerald + star + EEF for the foundation; night waypath + EEF for Learn).
+- Optical size: 16–32px can be the badge or the star; 36px+ is badge/waypath + wordmark.
 - The mark doubles as UI: the map's node states are drawn from the same geometry (see §5).
 
 **Wordmark:** "EEF Learn" set in Satoshi Bold (Outfit substitutes in Figma), tight tracking (-0.02em). Foundation line set in JetBrains Mono 0.7em uppercase, tracked +0.08em.

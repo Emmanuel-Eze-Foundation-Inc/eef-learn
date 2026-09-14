@@ -3,9 +3,13 @@ import { prisma } from "@eef/db";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { env } from "@/lib/env";
 import { getSession } from "@/lib/session";
+import { userHasApiKey } from "@/lib/user-ai-key";
 
-import { WaypathMark } from "../components/waypath-mark";
+import { OpenRouterKeyForm } from "../components/openrouter-key-form";
+import { UnseenEngineSponsor } from "../components/unseen-engine-sponsor";
+import { LearnLockup } from "../components/learn-lockup";
 import { SignOutButton } from "./sign-out-button";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +20,7 @@ export default async function DashboardPage() {
   if (!session) redirect("/sign-in");
   const userId = session.user.id;
 
-  const [maps, lastProgress, quotas] = await Promise.all([
+  const [maps, lastProgress, quotas, hasKey, user] = await Promise.all([
     prisma.map.findMany({
       where: { creatorId: userId },
       orderBy: { updatedAt: "desc" },
@@ -31,6 +35,8 @@ export default async function DashboardPage() {
       include: { map: true, node: true },
     }),
     prisma.quota.findMany({ where: { userId } }),
+    userHasApiKey(userId),
+    prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
   ]);
 
   const quotaFor = (kind: QuotaKind) => {
@@ -42,11 +48,15 @@ export default async function DashboardPage() {
   return (
     <main className="min-h-screen bg-night-950 px-8 py-6 text-star-100 lg:px-16">
       <nav className="flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5">
-          <WaypathMark className="h-7 w-7" />
-          <span className="text-lg font-semibold tracking-tight">EEF Learn</span>
+        <Link href="/learn" className="flex items-center">
+          <LearnLockup />
         </Link>
         <div className="flex items-center gap-4">
+          {user?.role === "admin" ? (
+            <Link href="/dashboard/inquiries" className="text-sm text-star-400 hover:text-star-100">
+              Inquiries
+            </Link>
+          ) : null}
           <Link href="/community" className="text-sm text-star-400 hover:text-star-100">
             Community maps
           </Link>
@@ -75,6 +85,10 @@ export default async function DashboardPage() {
           New map
         </Link>
       </header>
+
+      <section className="mt-10">
+        <OpenRouterKeyForm initialConfigured={hasKey} mock={env.AI_PROVIDER === "mock"} />
+      </section>
 
       {/* Resume card */}
       {lastProgress && (
@@ -151,6 +165,9 @@ export default async function DashboardPage() {
           </div>
         )}
       </section>
+      <footer className="mt-16 pb-8">
+        <UnseenEngineSponsor variant="footer" />
+      </footer>
     </main>
   );
 }

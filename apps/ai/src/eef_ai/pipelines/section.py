@@ -19,8 +19,8 @@ from eef_ai.worker import JobContext, PermanentJobError, register_handler
 
 async def handle_section(ctx: JobContext) -> dict[str, Any]:
     settings = load_settings()
-    provider = get_provider(settings)
     p = ctx.payload
+    provider = get_provider(settings, p.get("userApiKey"))
     node_id: str = p["nodeId"]
     map_version: int = p.get("mapVersion", 1)
     user_id: str = ctx.job["userId"]

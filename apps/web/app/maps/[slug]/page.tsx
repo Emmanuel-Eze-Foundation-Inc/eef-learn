@@ -1,3 +1,4 @@
+import { flattenTree } from "@eef/core";
 import { prisma } from "@eef/db";
 import { notFound, redirect } from "next/navigation";
 
@@ -27,7 +28,7 @@ export default async function MapPage({
     include: {
       nodes: {
         orderBy: { order: "asc" },
-        include: { contentBlocks: { orderBy: { blockIndex: "asc" } } },
+        include: { contentBlocks: { orderBy: { blockIndex: "asc" }, include: { attributions: true } } },
       },
       edges: true,
       progress: { where: { userId: session.user.id } },
@@ -39,25 +40,42 @@ export default async function MapPage({
   const progressByNode = new Map(map.progress.map((p) => [p.nodeId, p]));
   const masteredIds = new Set(map.progress.filter((p) => p.mastered).map((p) => p.nodeId));
 
-  const stages: Stage[] = map.nodes.map((n) => {
-    const prereqs = map.edges.filter((e) => e.toId === n.id).map((e) => e.fromId);
+  const travelNodes = flattenTree(
+    map.nodes.map((n) => ({ ...n, parentId: n.parentId })),
+  );
+  const stages: Stage[] = travelNodes.map((n) => {
+    const prereqs = map.edges
+      .filter((e) => e.kind === "prerequisite" && e.toId === n.id)
+      .map((e) => e.fromId);
     const locked = prereqs.length > 0 && !prereqs.every((id) => masteredIds.has(id));
     let state: NodeState;
     if (masteredIds.has(n.id)) state = "mastered";
     else if (locked) state = "locked";
     else if (progressByNode.has(n.id)) state = "in_progress";
     else state = "available";
-    const node: GraphNode = { id: n.id, slug: n.slug, title: n.title, order: n.order, state };
+    const node: GraphNode = {
+      id: n.id,
+      slug: n.slug,
+      title: n.title,
+      order: n.order,
+      parentId: n.parentId,
+      state,
+    };
     const blocks = n.contentBlocks
       .filter((b) => b.mapVersion === map.version)
-      .map((b) => ({
-        id: b.id,
-        title: b.title,
-        body: b.body,
-        url: b.url,
-        type: b.type,
-        provenanceModel: b.provenanceModel,
-      }));
+      .map((b) => {
+        const attr = b.attributions[0];
+        return {
+          id: b.id,
+          title: b.title,
+          body: b.body,
+          url: b.url,
+          type: b.type,
+          provenanceModel: b.provenanceModel,
+          attributionName: attr?.sourceName ?? null,
+          attributionUrl: attr?.sourceUrl ?? b.url,
+        };
+      });
     return { ...node, blocks };
   });
 
@@ -69,18 +87,10 @@ export default async function MapPage({
       : stages.findIndex((s) => s.state === "available");
   const initialIndex = fromQuery >= 0 ? fromQuery : Math.max(0, resume);
 
-  const mapComplete = map.nodes.length > 0 && masteredIds.size === map.nodes.length;
-  const [openChatRequest, thread] = await Promise.all([
-    mapComplete
-      ? prisma.coffeeChatRequest.findFirst({
-          where: { userId: session.user.id, mapId: map.id, status: "open" },
-        })
-      : Promise.resolve(null),
-    prisma.companionThread.findFirst({
-      where: { userId: session.user.id, mapId: map.id },
-      include: { messages: { orderBy: { createdAt: "asc" }, take: 30 } },
-    }),
-  ]);
+  const thread = await prisma.companionThread.findFirst({
+    where: { userId: session.user.id, mapId: map.id },
+    include: { messages: { orderBy: { createdAt: "asc" }, take: 30 } },
+  });
 
   const current = stages[initialIndex];
   const firstName = (session.user.name || "friend").split(" ")[0];
@@ -95,19 +105,16 @@ export default async function MapPage({
       mapId={map.id}
       mapSlug={map.slug}
       mapTitle={map.title}
-      mapVersion={map.version}
       visibility={map.visibility}
       isCreator={map.creatorId === session.user.id}
       generationEnabled={map.generationEnabled}
       stages={stages}
-      edges={map.edges.map((e) => ({ fromId: e.fromId, toId: e.toId }))}
       initialIndex={initialIndex}
       greeting={greeting}
       companionMessages={(thread?.messages ?? []).map((m) => ({
         role: m.role,
         content: m.content,
       }))}
-      alreadyRequestedChat={Boolean(openChatRequest)}
     />
   );
 }

@@ -41,7 +41,14 @@ export function Constellation({ className }: { className?: string }) {
         <path d="M230 318 L234 328 L244 332 L234 336 L230 346 L226 336 L216 332 L226 328 Z" />
       </g>
       {/* current node (aurora halo) */}
-      <circle cx="200" cy="210" r="22" className="stroke-aurora-400" strokeWidth="1.4" opacity="0.5" />
+      <circle
+        cx="200"
+        cy="210"
+        r="22"
+        className="origin-[200px_210px] stroke-aurora-400 motion-safe:animate-[aurora-halo_3.2s_cubic-bezier(0.23,1,0.32,1)_infinite]"
+        strokeWidth="1.4"
+        opacity="0.5"
+      />
       <circle cx="200" cy="210" r="9" className="fill-aurora-400" />
       {/* upcoming */}
       <circle cx="360" cy="360" r="7" className="fill-star-100" opacity="0.9" />

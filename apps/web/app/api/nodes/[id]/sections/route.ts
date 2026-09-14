@@ -2,7 +2,9 @@ import { prisma } from "@eef/db";
 import { createId } from "@paralleldrive/cuid2";
 import { NextResponse } from "next/server";
 
+import { env } from "@/lib/env";
 import { getSession } from "@/lib/session";
+import { getUserApiKey } from "@/lib/user-ai-key";
 
 /**
  * POST /api/nodes/:id/sections — enqueue a section-generation job (ticket T10).
@@ -28,6 +30,17 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   });
   if (active) return NextResponse.json({ jobId: active.id }, { status: 200 });
 
+  const userApiKey = await getUserApiKey(session.user.id);
+  if (!userApiKey && env.AI_PROVIDER !== "mock") {
+    return NextResponse.json(
+      {
+        error: "openrouter_key_required",
+        message: "Add your OpenRouter key to generate a section.",
+      },
+      { status: 409 },
+    );
+  }
+
   const job = await prisma.generationJob.create({
     data: {
       id: `job_${createId()}`,
@@ -42,6 +55,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
         nodeTitle: node.title,
         nodeSlug: node.slug,
         mapVersion: node.map.version,
+        userApiKey,
       },
     },
   });

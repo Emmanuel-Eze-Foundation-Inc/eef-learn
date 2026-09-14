@@ -24,13 +24,14 @@ def _id(prefix: str) -> str:
 
 async def handle_skeleton(ctx: JobContext) -> dict[str, Any]:
     settings = load_settings()
-    provider = get_provider(settings)
+    provider = get_provider(settings, ctx.payload.get("userApiKey"))
     topic: str = ctx.payload["topic"]
     map_id: str = ctx.payload["mapId"]
+    brief = ctx.payload.get("brief") if isinstance(ctx.payload.get("brief"), dict) else None
 
     await ctx.checkpoint("skeleton_requested", topic=topic)
 
-    skeleton = await provider.map_skeleton(topic)
+    skeleton = await provider.map_skeleton(topic, brief)
     problems = validate_skeleton(skeleton)
     if problems:
         raise ValueError(f"invalid skeleton from provider: {'; '.join(problems)}")
@@ -48,14 +49,23 @@ async def handle_skeleton(ctx: JobContext) -> dict[str, Any]:
             node_ids[n["slug"]] = nid
             await conn.execute(
                 """
-                INSERT INTO "Node" (id, "mapId", slug, title, "order", "updatedAt")
-                VALUES ($1, $2, $3, $4, $5, now())
+                INSERT INTO "Node" (id, "mapId", slug, title, "order", "parentId", "updatedAt")
+                VALUES ($1, $2, $3, $4, $5, NULL, now())
                 """,
                 nid,
                 map_id,
                 n["slug"],
                 n["title"],
                 n["order"],
+            )
+        for n in nodes:
+            parent_slug = n.get("parent") or None
+            if not parent_slug:
+                continue
+            await conn.execute(
+                'UPDATE "Node" SET "parentId" = $1, "updatedAt" = now() WHERE id = $2',
+                node_ids[parent_slug],
+                node_ids[n["slug"]],
             )
         for e in edges:
             await conn.execute(
@@ -74,7 +84,10 @@ async def handle_skeleton(ctx: JobContext) -> dict[str, Any]:
     await ctx.checkpoint(
         "nodes_created",
         map_id=map_id,
-        nodes=[{"slug": n["slug"], "title": n["title"]} for n in nodes],
+        nodes=[
+            {"slug": n["slug"], "title": n["title"], "parent": n.get("parent") or None}
+            for n in nodes
+        ],
     )
     await ctx.checkpoint("done")
     return {"cost_cents": 0}

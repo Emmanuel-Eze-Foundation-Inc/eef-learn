@@ -36,6 +36,8 @@ enum BlockType {
   blog
   ai_text
   pdf_extract
+  flashcard
+  quiz
 }
 
 enum JobStatus {
@@ -58,7 +60,8 @@ model User {
   name          String   @default("")
   image         String?
   role          Role     @default(user)
-  birthdate     DateTime // 13+ gate enforced at signup
+  birthdate     DateTime? // 13+ gate enforced at email signup; collected before Google
+  openRouterKeyCipher String? // AES-GCM blob; never returned to the client
   emailVerified Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -136,6 +139,7 @@ model Map {
   sourcePolicy       SourcePolicy  @default(augment)
   generationEnabled  Boolean       @default(true)
   regenerationEnabled Boolean      @default(true)
+  brief              Json? // interview answers: audience, startingPoint, depth, notes
   creatorId          String
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
@@ -161,10 +165,13 @@ model Node {
   slug      String // stable across regenerations
   title     String
   order     Int
+  parentId  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   map           Map            @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  parent        Node?          @relation("NodeTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children      Node[]         @relation("NodeTree")
   contentBlocks ContentBlock[]
   progress      Progress[]
   edgesFrom     Edge[]         @relation("edgeFrom")
@@ -172,6 +179,7 @@ model Node {
 
   @@unique([mapId, slug])
   @@index([mapId])
+  @@index([parentId])
 }
 
 model Edge {
@@ -379,6 +387,32 @@ model CoffeeChatRequest {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   map  Map  @relation(fields: [mapId], references: [id])
+
+  @@index([status, createdAt])
+}
+
+enum InquiryKind {
+  partnership
+  volunteer
+}
+
+enum InquiryStatus {
+  open
+  closed
+}
+
+model Inquiry {
+  id              String        @id @default(cuid())
+  kind            InquiryKind
+  name            String
+  email           String
+  organization    String?
+  volunteerIntent String?
+  context         String?
+  message         String
+  status          InquiryStatus @default(open)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   @@index([status, createdAt])
 }

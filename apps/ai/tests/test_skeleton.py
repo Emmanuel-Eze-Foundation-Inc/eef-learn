@@ -60,6 +60,18 @@ def test_rejects_too_small():
     assert validate_skeleton({"nodes": [{"slug": "a", "title": "A", "order": 0}]})
 
 
+def test_accepts_nested_parent():
+    s = valid_skeleton()
+    s["nodes"].append({"slug": "b-child", "title": "B child", "order": 0, "parent": "b"})
+    assert validate_skeleton(s) == []
+
+
+def test_rejects_unknown_parent():
+    s = valid_skeleton()
+    s["nodes"][1]["parent"] = "ghost"
+    assert any("parent is missing" in e for e in validate_skeleton(s))
+
+
 # --- end-to-end pipeline test (DB-backed) ---
 
 
@@ -106,8 +118,9 @@ async def test_skeleton_job_end_to_end(monkeypatch):
 
         nodes = await pool.fetch('SELECT * FROM "Node" WHERE "mapId" = $1 ORDER BY "order"', map_id)
         edges = await pool.fetch('SELECT * FROM "Edge" WHERE "mapId" = $1', map_id)
-        assert len(nodes) == 4  # mock provider emits 4 nodes
+        assert len(nodes) == 6  # mock provider emits a nested tree
         assert len(edges) == 3
+        assert any(n["parentId"] for n in nodes)
         node_ids = {n["id"] for n in nodes}
         assert all(e["fromId"] in node_ids and e["toId"] in node_ids for e in edges)
 

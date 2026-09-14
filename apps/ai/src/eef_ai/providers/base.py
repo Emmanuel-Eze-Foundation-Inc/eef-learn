@@ -7,7 +7,7 @@ from eef_ai.settings import Settings
 
 
 class Provider(Protocol):
-    async def map_skeleton(self, topic: str) -> dict[str, Any]: ...
+    async def map_skeleton(self, topic: str, brief: dict[str, Any] | None = None) -> dict[str, Any]: ...
 
     async def section_text(self, *, topic: str, node_slug: str, node_title: str) -> dict[str, Any]: ...
 
@@ -19,8 +19,8 @@ class Provider(Protocol):
 class MockProvider:
     """Adapts the deterministic mock module to the async Provider protocol."""
 
-    async def map_skeleton(self, topic: str) -> dict[str, Any]:
-        return mock.generate_map_skeleton(topic)
+    async def map_skeleton(self, topic: str, brief: dict[str, Any] | None = None) -> dict[str, Any]:
+        return mock.generate_map_skeleton(topic, brief)
 
     async def section_text(self, *, topic: str, node_slug: str, node_title: str) -> dict[str, Any]:
         return mock.generate_section_text(node_slug)
@@ -32,7 +32,11 @@ class MockProvider:
         return mock.embed(texts, dimensions)
 
 
-def get_provider(settings: Settings) -> Provider:
+def get_provider(settings: Settings, user_api_key: str | None = None) -> Provider:
+    if user_api_key:
+        from eef_ai.providers.openrouter import OpenRouterProvider
+
+        return OpenRouterProvider(settings, api_key=user_api_key)
     if settings.ai_provider == "mock":
         return MockProvider()
     # openrouter / openai / openai-compatible all speak the same chat-completions dialect

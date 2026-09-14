@@ -7,12 +7,21 @@ import { APIError, createAuthMiddleware } from "better-auth/api";
 import { sendEmail } from "./email";
 import { env } from "./env";
 
+export const googleAuthEnabled = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
+
+function birthdateFromCookie(cookieHeader: string | null | undefined): Date | undefined {
+  if (!cookieHeader) return undefined;
+  const match = cookieHeader.match(/(?:^|; )eef-birthdate=([^;]+)/);
+  if (!match) return undefined;
+  return parseEligibleBirthdate(decodeURIComponent(match[1])) ?? undefined;
+}
+
 /**
  * Better Auth server (ticket T1).
  * - email/password with verification (console/Mailpit in dev, SMTP in prod)
  * - AUTH_EMAIL_VERIFICATION=off escape hatch for local/self-host
- * - 13+ birthdate gate enforced server-side at signup
- * - roles: user | moderator | admin (stored on User, default user)
+ * - 13+ birthdate gate enforced server-side at email signup and via cookie on Google
+ * - roles: user | admin (stored on User, default user)
  * - optional Google OAuth when GOOGLE_CLIENT_ID/SECRET are set
  */
 export const auth = betterAuth({
@@ -34,19 +43,33 @@ export const auth = betterAuth({
       });
     },
   },
-  socialProviders:
-    env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
-      ? {
-          google: {
-            clientId: env.GOOGLE_CLIENT_ID,
-            clientSecret: env.GOOGLE_CLIENT_SECRET,
-          },
-        }
-      : undefined,
+  socialProviders: googleAuthEnabled
+    ? {
+        google: {
+          clientId: env.GOOGLE_CLIENT_ID as string,
+          clientSecret: env.GOOGLE_CLIENT_SECRET as string,
+        },
+      }
+    : undefined,
   user: {
     additionalFields: {
-      birthdate: { type: "date", required: true, input: true },
+      birthdate: { type: "date", required: false, input: true },
       role: { type: "string", required: false, defaultValue: "user", input: false },
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user, ctx) => {
+          const cookieHeader =
+            ctx && typeof ctx === "object" && "headers" in ctx
+              ? (ctx.headers as Headers | undefined)?.get?.("cookie")
+              : undefined;
+          const fromCookie = birthdateFromCookie(cookieHeader);
+          if (!fromCookie) return { data: user };
+          return { data: { ...user, birthdate: fromCookie } };
+        },
+      },
     },
   },
   hooks: {
@@ -60,7 +83,6 @@ export const auth = betterAuth({
           code: "AGE_GATE",
         });
       }
-      // Normalize to a Date so the adapter stores a proper timestamp.
       return { context: { ...ctx, body: { ...ctx.body, birthdate } } };
     }),
   },

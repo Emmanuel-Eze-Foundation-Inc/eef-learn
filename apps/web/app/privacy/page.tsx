@@ -1,17 +1,16 @@
 import Link from "next/link";
 
-import { WaypathMark } from "../components/waypath-mark";
+import { LearnLockup } from "../components/learn-lockup";
 
 export default function PrivacyPage() {
   return (
     <main className="min-h-screen bg-night-950 px-8 py-6 text-star-100 lg:px-16">
       <nav className="flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5">
-          <WaypathMark className="h-7 w-7" />
-          <span className="text-lg font-semibold tracking-tight">EEF Learn</span>
+        <Link href="/learn" className="flex items-center">
+          <LearnLockup />
         </Link>
-        <Link href="/" className="text-sm text-star-400 hover:text-star-100">
-          Back home
+        <Link href="/learn" className="text-sm text-star-400 hover:text-star-100">
+          Back to Learn
         </Link>
       </nav>
       <article className="mx-auto mt-12 max-w-2xl space-y-6 pb-24 leading-relaxed">
@@ -24,7 +23,7 @@ export default function PrivacyPage() {
         <h2 className="pt-4 text-xl font-semibold">What we store</h2>
         <ul className="list-disc space-y-2 pl-5 text-star-400">
           <li>Account: name, email, password hash, and birthdate (used only for the 13+ age gate).</li>
-          <li>Learning: maps you create, progress on nodes, companion chat messages, coffee-chat requests.</li>
+          <li>Learning: maps you create, progress on nodes, and companion chat messages.</li>
           <li>Operational: session cookies, daily generation quotas, and job logs for map building.</li>
         </ul>
         <h2 className="pt-4 text-xl font-semibold">What we do not do</h2>
@@ -36,8 +35,8 @@ export default function PrivacyPage() {
         <h2 className="pt-4 text-xl font-semibold">Contact</h2>
         <p className="text-star-400">
           Questions:{" "}
-          <a href="https://emmanuelezefoundation.org" className="text-aurora-400 hover:underline">
-            emmanuelezefoundation.org
+          <a href="/contact" className="text-aurora-400 hover:underline">
+            Contact the foundation
           </a>
           .
         </p>
