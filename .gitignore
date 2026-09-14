@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Builds
+.next/
+out/
+dist/
+build/
+.turbo/
+.expo/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Local agent tooling (not part of the project)
+.agents/
+.codex/
+.cursor/
+.impeccable/
+.claude/
+
+# OS / editor
+.DS_Store
+*.log
+.idea/
+*.swp
+
+# Test artifacts
+coverage/
+playwright-report/
+test-results/
