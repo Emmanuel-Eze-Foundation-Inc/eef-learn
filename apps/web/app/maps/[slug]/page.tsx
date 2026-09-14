@@ -6,6 +6,7 @@ import { getSession } from "@/lib/session";
 
 import { WaypathMark } from "../../components/waypath-mark";
 import { MapGraph, type GraphNode, type NodeState } from "./map-graph";
+import { MapViewSwitcher } from "./map-view-switcher";
 
 export const dynamic = "force-dynamic";
 
@@ -76,10 +77,17 @@ export default async function MapPage({ params }: { params: Promise<{ slug: stri
       </header>
 
       <section className="mt-8">
-        <MapGraph
+        <MapViewSwitcher
           mapSlug={map.slug}
           nodes={nodes}
           edges={map.edges.map((e) => ({ fromId: e.fromId, toId: e.toId }))}
+          map2d={
+            <MapGraph
+              mapSlug={map.slug}
+              nodes={nodes}
+              edges={map.edges.map((e) => ({ fromId: e.fromId, toId: e.toId }))}
+            />
+          }
         />
         <div className="mt-4 flex flex-wrap gap-6 font-mono text-[10px] uppercase tracking-[0.14em] text-star-400">
           <span><span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-gold-400" />Mastered</span>
