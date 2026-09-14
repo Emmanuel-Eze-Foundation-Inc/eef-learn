@@ -12,7 +12,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException
 
 from eef_ai import worker
 from eef_ai.db import close_pool, get_pool
-from eef_ai.pipelines import skeleton  # noqa: F401 — registers the "skeleton" handler
+from eef_ai.pipelines import section, skeleton  # noqa: F401 — registers job handlers
 from eef_ai.providers import mock
 from eef_ai.settings import Settings, load_settings
 

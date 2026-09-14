@@ -31,6 +31,10 @@ Handler = Callable[["JobContext"], Awaitable[dict[str, Any] | None]]
 _handlers: dict[str, Handler] = {}
 
 
+class PermanentJobError(Exception):
+    """Raised by pipelines for errors that must NOT be retried (e.g. quota exceeded)."""
+
+
 def register_handler(kind: str, handler: Handler) -> None:
     _handlers[kind] = handler
 
@@ -100,18 +104,19 @@ async def complete_job(pool: asyncpg.Pool, job_id: str, actual_cost_cents: int =
     )
 
 
-async def fail_job(pool: asyncpg.Pool, job_id: str, error: str) -> None:
-    """Re-queue for retry, or fail permanently once attempts reach maxAttempts."""
+async def fail_job(pool: asyncpg.Pool, job_id: str, error: str, permanent: bool = False) -> None:
+    """Re-queue for retry, or fail permanently (at max attempts or when marked permanent)."""
     await pool.execute(
         """
         UPDATE "GenerationJob"
-        SET status = CASE WHEN attempts >= "maxAttempts"
+        SET status = CASE WHEN $3 OR attempts >= "maxAttempts"
                           THEN 'failed'::"JobStatus" ELSE 'queued'::"JobStatus" END,
             error = $2, "claimedBy" = NULL, "heartbeatAt" = NULL, "updatedAt" = now()
         WHERE id = $1
         """,
         job_id,
         error[:2000],
+        permanent,
     )
 
 
@@ -154,6 +159,9 @@ async def run_job(pool: asyncpg.Pool, job: asyncpg.Record, worker_id: str) -> No
     try:
         result = await handler(ctx)
         await complete_job(pool, ctx.job_id, (result or {}).get("cost_cents", 0))
+    except PermanentJobError as e:
+        logger.warning("job %s failed permanently: %s", ctx.job_id, e)
+        await fail_job(pool, ctx.job_id, str(e), permanent=True)
     except Exception as e:
         logger.exception("job %s failed", ctx.job_id)
         await fail_job(pool, ctx.job_id, f"{type(e).__name__}: {e}")
