@@ -1,0 +1,21 @@
+{
+  "name": "eef-learn",
+  "private": true,
+  "packageManager": "pnpm@9.9.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:setup": "node scripts/dev-setup.mjs",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "db:migrate": "pnpm --filter @eef/db migrate:dev",
+    "db:seed": "pnpm --filter @eef/db seed"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0"
+  }
+}

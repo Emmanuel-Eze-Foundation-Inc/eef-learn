@@ -1,0 +1,331 @@
+// EEF Learn — data layer (PLAN.md M1)
+// pgvector: enabled via migration `CREATE EXTENSION IF NOT EXISTS vector`.
+// GenerationJob dedup: partial unique index added in raw SQL migration:
+//   CREATE UNIQUE INDEX generation_job_dedup ON "GenerationJob"(map_id, node_id, block_index)
+//   WHERE status IN ('queued','running');
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
+}
+
+enum Role {
+  user
+  admin
+}
+
+enum MapVisibility {
+  private
+  unlisted
+  public
+}
+
+enum SourcePolicy {
+  stick_to_doc
+  augment
+}
+
+enum BlockType {
+  youtube
+  blog
+  ai_text
+  pdf_extract
+}
+
+enum JobStatus {
+  queued
+  running
+  succeeded
+  failed
+  cancelled
+}
+
+enum ProposalStatus {
+  pending
+  accepted
+  rejected
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  role          Role     @default(user)
+  birthdate     DateTime // 13+ gate enforced at signup
+  emailVerified Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  maps             Map[]
+  progress         Progress[]
+  threads          CompanionThread[]
+  quotas           Quota[]
+  generationJobs   GenerationJob[]
+  updateProposals  UpdateProposal[]  @relation("proposalLearner")
+  coffeeChatRequests CoffeeChatRequest[]
+
+  @@index([email])
+}
+
+model Map {
+  id                 String        @id @default(cuid())
+  slug               String        @unique
+  title              String
+  topic              String
+  version            Int           @default(1)
+  visibility         MapVisibility @default(private)
+  sourcePolicy       SourcePolicy  @default(augment)
+  generationEnabled  Boolean       @default(true)
+  regenerationEnabled Boolean      @default(true)
+  creatorId          String
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  creator        User             @relation(fields: [creatorId], references: [id])
+  nodes          Node[]
+  edges          Edge[]
+  progress       Progress[]
+  threads        CompanionThread[]
+  generationJobs GenerationJob[]
+  // composition: this map as parent (built on components) and as component (used by parents)
+  components     MapComposition[] @relation("parentMap")
+  usedIn         MapComposition[] @relation("componentMap")
+  coffeeChatRequests CoffeeChatRequest[]
+
+  @@index([creatorId])
+  @@index([visibility])
+}
+
+model Node {
+  id        String   @id @default(cuid())
+  mapId     String
+  slug      String // stable across regenerations
+  title     String
+  order     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  map           Map            @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  contentBlocks ContentBlock[]
+  progress      Progress[]
+  edgesFrom     Edge[]         @relation("edgeFrom")
+  edgesTo       Edge[]         @relation("edgeTo")
+
+  @@unique([mapId, slug])
+  @@index([mapId])
+}
+
+model Edge {
+  id        String   @id @default(cuid())
+  mapId     String
+  fromId    String
+  toId      String
+  kind      String   @default("prerequisite")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  map  Map  @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  from Node @relation("edgeFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  to   Node @relation("edgeTo", fields: [toId], references: [id], onDelete: Cascade)
+
+  @@unique([mapId, fromId, toId, kind])
+  @@index([mapId])
+}
+
+model ContentBlock {
+  id         String    @id @default(cuid())
+  nodeId     String
+  blockIndex Int
+  type       BlockType
+  title      String?
+  body       String? // ai_text body / blog metadata JSON / pdf extract
+  url        String? // youtube/blog canonical URL (validated, SSRF-hardened at write time)
+  // provenance (ai_text): model id, prompt hash, source block ids
+  provenanceModel      String?
+  provenancePromptHash String?
+  provenanceSourceIds  String[]
+  mapVersion Int
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  node         Node          @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  attributions Attribution[]
+
+  @@unique([nodeId, blockIndex, mapVersion])
+  @@index([nodeId])
+}
+
+model Attribution {
+  id             String   @id @default(cuid())
+  contentBlockId String
+  sourceType     String // youtube | blog | community_map | pdf
+  sourceName     String
+  sourceUrl      String?
+  sourceMapId    String? // credit to another learning map
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  contentBlock ContentBlock @relation(fields: [contentBlockId], references: [id], onDelete: Cascade)
+
+  @@index([contentBlockId])
+}
+
+model MapComposition {
+  id             String   @id @default(cuid())
+  parentMapId    String
+  componentMapId String
+  componentVersion Int // pinned version of the component map
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  parentMap    Map              @relation("parentMap", fields: [parentMapId], references: [id], onDelete: Cascade)
+  componentMap Map              @relation("componentMap", fields: [componentMapId], references: [id])
+  proposals    UpdateProposal[]
+
+  @@unique([parentMapId, componentMapId])
+  @@index([componentMapId])
+}
+
+model UpdateProposal {
+  id            String         @id @default(cuid())
+  compositionId String
+  learnerId     String
+  fromVersion   Int
+  toVersion     Int
+  status        ProposalStatus @default(pending)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  composition MapComposition @relation(fields: [compositionId], references: [id], onDelete: Cascade)
+  learner     User           @relation("proposalLearner", fields: [learnerId], references: [id])
+
+  @@index([compositionId])
+  @@index([learnerId, status])
+}
+
+model Progress {
+  id         String   @id @default(cuid())
+  userId     String
+  mapId      String
+  nodeId     String
+  mapVersion Int // stale-version writes rejected (eng E4)
+  blocksDone Int      @default(0)
+  mastered   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt // optimistic guard
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  map  Map  @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, nodeId])
+  @@index([userId, mapId])
+}
+
+model CompanionThread {
+  id        String   @id @default(cuid())
+  userId    String
+  mapId     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  map      Map?      @relation(fields: [mapId], references: [id], onDelete: SetNull)
+  messages Message[]
+
+  @@index([userId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  threadId  String
+  role      String // user | assistant | tool
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  thread CompanionThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+}
+
+model GenerationJob {
+  id          String    @id @default(cuid())
+  kind        String // skeleton | section | enrich | embed | pdf_import
+  status      JobStatus @default(queued)
+  mapId       String?
+  nodeId      String?
+  blockIndex  Int?
+  userId      String
+  payload     Json
+  // checkpoints: append-only progress records the client polls (eng A1)
+  checkpoints Json      @default("[]")
+  // lease (eng A2)
+  claimedBy   String?
+  heartbeatAt DateTime?
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(3)
+  // spend reservation (eng E2)
+  reservedCostCents Int @default(0)
+  actualCostCents   Int?
+  error       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  map  Map?  @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  user User  @relation(fields: [userId], references: [id])
+
+  @@index([status, createdAt])
+  @@index([mapId, nodeId])
+  @@index([userId])
+}
+
+model Quota {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String // maps_per_day | sections_per_day | bot_msgs_per_day
+  used      Int      @default(0)
+  limit     Int
+  resetsAt  DateTime // UTC midnight
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind])
+}
+
+model KbPage {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Embeddings live in a raw-SQL-managed table (pgvector column type),
+// created in migrations: embedding vector(768) + ivfflat/hnsw index.
+// Dimension tracked in env (EMBEDDINGS_DIMENSIONS) with re-embed job on provider switch.
+
+model CoffeeChatRequest {
+  id           String   @id @default(cuid())
+  userId       String
+  mapId        String
+  availability String
+  note         String?
+  status       String   @default("open") // open | matched | done
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  map  Map  @relation(fields: [mapId], references: [id])
+
+  @@index([status, createdAt])
+}

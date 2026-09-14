@@ -1,0 +1,76 @@
+name: eef-learn
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: eef
+      POSTGRES_PASSWORD: eef
+      POSTGRES_DB: eef_learn
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eef -d eef_learn"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025" # web UI
+      - "1025:1025" # SMTP
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
+  migrate:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      target: deps
+    command: sh -c "pnpm --filter @eef/db migrate:deploy && pnpm --filter @eef/db seed"
+    environment:
+      DATABASE_URL: postgresql://eef:eef@postgres:5432/eef_learn
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  ai:
+    build:
+      context: apps/ai
+      dockerfile: ../../docker/ai.Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://eef:eef@postgres:5432/eef_learn
+      AI_SERVICE_TOKEN: dev-local-token
+      AI_PROVIDER: mock
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      target: dev
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://eef:eef@postgres:5432/eef_learn
+      AI_SERVICE_URL: http://ai:8000
+      AI_SERVICE_TOKEN: dev-local-token
+      AUTH_SECRET: dev-only-secret-change-me-0123456789
+      AI_PROVIDER: mock
+      SMTP_URL: smtp://mailpit:1025
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      ai:
+        condition: service_started
+
+volumes:
+  pgdata:

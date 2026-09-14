@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  web:
+    name: Lint / typecheck / test (TS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @eef/db generate
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  ai:
+    name: Lint / test (Python)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/ai
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync
+      - run: uv run ruff check .
+      - run: uv run pytest
+
+  compose-smoke:
+    name: Clean-clone compose smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Boot postgres + migrate + seed
+        run: |
+          cp .env.example .env
+          docker compose up -d postgres
+          docker compose run --rm migrate
+      - name: AI service boots and answers /health
+        run: |
+          docker compose up -d ai
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8000/health | grep -q '"ok":true'; then exit 0; fi
+            sleep 2
+          done
+          docker compose logs ai
+          exit 1
