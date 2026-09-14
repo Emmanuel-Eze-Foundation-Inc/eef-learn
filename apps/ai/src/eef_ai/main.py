@@ -4,11 +4,14 @@ M0 scope: boots with validated env, health endpoint, mock provider wired.
 M2 adds: job worker loop, generation pipelines, /retrieve.
 """
 
+import asyncio
 from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, Header, HTTPException
 
+from eef_ai import worker
+from eef_ai.db import close_pool, get_pool
 from eef_ai.providers import mock
 from eef_ai.settings import Settings, load_settings
 
@@ -17,8 +20,13 @@ settings: Settings = load_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # M2: schema-compatibility boot check (hard fail on migration mismatch) goes here.
+    pool = await get_pool(settings.database_url)
+    stop = asyncio.Event()
+    worker_task = asyncio.create_task(worker.worker_loop(pool, stop))
     yield
+    stop.set()
+    await worker_task
+    await close_pool()
 
 
 app = FastAPI(title="EEF Learn AI service", lifespan=lifespan)
