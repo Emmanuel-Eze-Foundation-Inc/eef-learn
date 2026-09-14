@@ -1,15 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 
 import { authClient } from "@/lib/auth-client";
+import { safeNextPath } from "@/lib/paths";
 
 import { Field, FormError, SubmitButton, TextInput } from "../auth-form";
 
-export default function SignInPage() {
+function SignInForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = safeNextPath(searchParams.get("next"));
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
@@ -36,12 +39,12 @@ export default function SignInPage() {
       }
       return;
     }
-    router.push("/dashboard");
+    router.push(next);
   }
 
   async function resend() {
     if (!unverifiedEmail) return;
-    await authClient.sendVerificationEmail({ email: unverifiedEmail, callbackURL: "/dashboard" });
+    await authClient.sendVerificationEmail({ email: unverifiedEmail, callbackURL: next });
     setResent(true);
   }
 
@@ -76,5 +79,17 @@ export default function SignInPage() {
         </Link>
       </p>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense
+      fallback={
+        <p className="text-star-400">Loading sign in…</p>
+      }
+    >
+      <SignInForm />
+    </Suspense>
   );
 }

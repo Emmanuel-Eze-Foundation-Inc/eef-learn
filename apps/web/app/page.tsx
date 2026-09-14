@@ -1,42 +1,57 @@
+import Link from "next/link";
+
+import { getSession } from "@/lib/session";
+
+import { LandingStartForm } from "./components/landing-start-form";
 import { WaypathMark } from "./components/waypath-mark";
 import { Constellation } from "./components/constellation";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Landing page — implements prototype screen "01 Landing" (Aurora brand v2.0).
- * Static in M0; the topic input wires to anonymous skeleton preview in M3.
  */
-export default function Landing() {
+export default async function Landing() {
+  const session = await getSession();
+
   return (
     <main className="flex-1 bg-night-950 text-star-100">
-      {/* Nav */}
       <nav className="flex items-center justify-between px-16 py-6">
-        <div className="flex items-center gap-2.5">
+        <Link href="/" className="flex items-center gap-2.5">
           <WaypathMark className="h-7 w-7" />
           <span className="text-lg font-semibold tracking-tight">EEF Learn</span>
-        </div>
+        </Link>
         <div className="flex items-center gap-8 text-sm text-star-400">
           <a className="hover:text-star-100" href="#how-it-works">
             How it works
           </a>
-          <a className="hover:text-star-100" href="#community">
+          <Link className="hover:text-star-100" href="/community">
             Community maps
-          </a>
+          </Link>
           <a
             className="hover:text-star-100"
             href="https://github.com/Emmanuel-Eze-Foundation-Inc/eef-learn"
           >
             GitHub
           </a>
-          <a
-            href="/sign-in"
-            className="rounded-full border border-night-800 px-5 py-2.5 text-star-100 hover:border-star-400"
-          >
-            Sign in
-          </a>
+          {session ? (
+            <Link
+              href="/dashboard"
+              className="rounded-full bg-aurora-400 px-5 py-2.5 font-semibold text-ink-900"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <Link
+              href="/sign-in"
+              className="rounded-full border border-night-800 px-5 py-2.5 text-star-100 hover:border-star-400"
+            >
+              Sign in
+            </Link>
+          )}
         </div>
       </nav>
 
-      {/* Hero */}
       <section className="grid grid-cols-1 items-center gap-12 px-16 py-16 lg:grid-cols-2 lg:px-24">
         <div className="max-w-xl">
           <h1 className="text-5xl font-bold leading-[1.08] tracking-tight md:text-6xl">
@@ -48,27 +63,16 @@ export default function Landing() {
             Type a topic. Watch a constellation of credited lessons appear, then travel it star by
             star.
           </p>
-          <form className="mt-9 flex items-center gap-2 rounded-2xl border border-night-800 bg-night-900 p-2">
-            <input
-              className="flex-1 bg-transparent px-4 py-3 text-star-100 outline-none placeholder:text-star-400"
-              placeholder="What do you want to learn?"
-              aria-label="What do you want to learn?"
-            />
-            <button
-              type="submit"
-              className="rounded-xl bg-aurora-400 px-6 py-3 font-semibold text-ink-900"
-            >
-              Watch it build
-            </button>
-          </form>
+          <LandingStartForm />
           <p className="mt-8 font-mono text-[11px] uppercase tracking-[0.14em] text-star-400">
-            Free to try. No account needed. Every source credited.
+            {session
+              ? "Community maps are public. Type a topic to build your own."
+              : "Community maps are public. Sign in to build and save your own."}
           </p>
         </div>
         <Constellation className="hidden w-full lg:block" />
       </section>
 
-      {/* How it works */}
       <section id="how-it-works" className="px-16 py-12 lg:px-24">
         <h2 className="text-3xl font-bold tracking-tight">Three moves, forever.</h2>
         <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -101,28 +105,24 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Open source strip */}
       <section id="community" className="mt-12 bg-night-900 px-16 py-14 lg:px-24">
         <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div className="max-w-2xl">
-            <h2 className="text-2xl font-bold tracking-tight">
-              Built in the open by the Emmanuel Eze Foundation.
-            </h2>
+            <h2 className="text-2xl font-bold tracking-tight">Maps the community already walked.</h2>
             <p className="mt-4 leading-relaxed text-star-400">
-              MIT licensed. Self-host it with one command, or learn on ours. We will never compete
-              on generation quality; we compete on community and credit.
+              Browse published constellations without an account. MIT licensed. We will never
+              compete on generation quality; we compete on community and credit.
             </p>
           </div>
-          <a
-            href="https://github.com/Emmanuel-Eze-Foundation-Inc/eef-learn"
-            className="shrink-0 rounded-full border border-star-400 px-7 py-3.5 font-semibold hover:border-star-100"
+          <Link
+            href="/community"
+            className="shrink-0 rounded-full bg-aurora-400 px-7 py-3.5 font-semibold text-ink-900"
           >
-            Star on GitHub
-          </a>
+            Browse community maps
+          </Link>
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="flex items-center justify-between px-16 py-8 lg:px-24">
         <div className="flex items-center gap-3">
           <WaypathMark className="h-5 w-5" />
@@ -131,12 +131,12 @@ export default function Landing() {
           </span>
         </div>
         <div className="flex gap-6 text-sm text-star-400">
-          <a className="hover:text-star-100" href="/privacy">
+          <Link className="hover:text-star-100" href="/privacy">
             Privacy
-          </a>
-          <a className="hover:text-star-100" href="/age-policy">
+          </Link>
+          <Link className="hover:text-star-100" href="/age-policy">
             Age policy
-          </a>
+          </Link>
           <a className="hover:text-star-100" href="https://emmanuelezefoundation.org">
             Contact
           </a>

@@ -47,6 +47,9 @@ export default async function DashboardPage() {
           <span className="text-lg font-semibold tracking-tight">EEF Learn</span>
         </Link>
         <div className="flex items-center gap-4">
+          <Link href="/community" className="text-sm text-star-400 hover:text-star-100">
+            Community maps
+          </Link>
           <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-star-400">
             {session.user.name}
           </span>

@@ -18,7 +18,7 @@ export default async function SectionPage({
 }) {
   const { slug, node: nodeSlug } = await params;
   const session = await getSession();
-  if (!session) redirect("/sign-in");
+  if (!session) redirect(`/sign-in?next=${encodeURIComponent(`/maps/${slug}/${nodeSlug}`)}`);
 
   const map = await prisma.map.findUnique({
     where: { slug },

@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 export default async function MapPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const session = await getSession();
-  if (!session) redirect("/sign-in");
+  if (!session) redirect(`/sign-in?next=${encodeURIComponent(`/maps/${slug}`)}`);
 
   const map = await prisma.map.findUnique({
     where: { slug },

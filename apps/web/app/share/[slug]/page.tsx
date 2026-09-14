@@ -35,12 +35,17 @@ export default async function SharePage({ params }: { params: Promise<{ slug: st
           <WaypathMark className="h-7 w-7" />
           <span className="text-lg font-semibold tracking-tight">EEF Learn</span>
         </Link>
-        <Link
-          href="/sign-up"
-          className="rounded-full bg-aurora-400 px-5 py-2.5 text-sm font-semibold text-ink-900"
-        >
-          Start your own map
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/community" className="text-sm text-star-400 hover:text-star-100">
+            Community maps
+          </Link>
+          <Link
+            href={`/maps/${map.slug}`}
+            className="rounded-full bg-aurora-400 px-5 py-2.5 text-sm font-semibold text-ink-900"
+          >
+            Travel this map
+          </Link>
+        </div>
       </nav>
 
       <header className="mt-10">

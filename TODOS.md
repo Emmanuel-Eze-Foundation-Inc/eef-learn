@@ -8,7 +8,8 @@ Deferred from v1 with rationale; each was explicitly priced, not forgotten.
 - [ ] Full brand guide execution via /design-consultation (interim visual spec covers v1)
 
 ## v2 — community layer
-- [ ] Publish/discover feed for community maps (v1 has read-only share links)
+- [x] Browse catalog of published maps (`/community`) — pulled into v1 so the landing "Community maps" nav works; composition/discovery ranking still v2
+- [ ] Richer discover feed (search, tags, ranking) for community maps
 - [ ] Map composition UI + UpdateProposal accept-all/individual flows (schema ships in v1)
 - [ ] Mentor Match: swipe interface, mutual match, 30-min coffee-chat scheduling
 - [ ] Help broadcasts ("I need help with X" → matched with "I can help with X")
