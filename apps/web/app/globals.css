@@ -15,6 +15,8 @@
   --aurora-600: #0e7a55;
   --gold-400: #f2c14e;
   --ink-900: #0f1d17;
+  --ember-300: #fda4af;
+  --ember-500: #e11d48;
 }
 
 [data-theme="light"] {
@@ -27,6 +29,8 @@
   --aurora-600: #34d98c;
   --gold-400: #f2c14e;
   --ink-900: #f7f5ef;
+  --ember-300: #9f1239;
+  --ember-500: #e11d48;
 }
 
 @theme inline {
@@ -39,6 +43,8 @@
   --color-aurora-600: var(--aurora-600);
   --color-gold-400: var(--gold-400);
   --color-ink-900: var(--ink-900);
+  --color-ember-300: var(--ember-300);
+  --color-ember-500: var(--ember-500);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
