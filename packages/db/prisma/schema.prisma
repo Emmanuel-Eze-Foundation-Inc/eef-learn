@@ -38,6 +38,12 @@ enum BlockType {
   pdf_extract
   flashcard
   quiz
+  video
+  image
+  audio
+  embed
+  code
+  resource
 }
 
 enum JobStatus {
@@ -46,6 +52,12 @@ enum JobStatus {
   succeeded
   failed
   cancelled
+}
+
+enum AccessStatus {
+  pending
+  approved
+  declined
 }
 
 enum ProposalStatus {
@@ -58,10 +70,17 @@ model User {
   id            String   @id @default(cuid())
   email         String   @unique
   name          String   @default("")
-  image         String?
+  image         String? // https URL from Google, or a small data: URL uploaded in settings
+  headline      String   @default("")
+  bio           String   @default("")
+  location      String   @default("")
+  website       String   @default("")
   role          Role     @default(user)
   birthdate     DateTime? // 13+ gate enforced at email signup; collected before Google
-  openRouterKeyCipher String? // AES-GCM blob; never returned to the client
+  aiKeyCipher   String? // the user's own model key, AES-GCM; never returned to the client
+  aiKeyProvider String? // openrouter | openai | anthropic | google
+  aiKeyModel    String? // optional model id; the provider's default when null
+  learningPathPublic Boolean @default(false) // shows /people/:id with the public maps they're on
   emailVerified Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -72,10 +91,15 @@ model User {
   maps             Map[]
   progress         Progress[]
   threads          CompanionThread[]
-  quotas           Quota[]
   generationJobs   GenerationJob[]
   updateProposals  UpdateProposal[]  @relation("proposalLearner")
   coffeeChatRequests CoffeeChatRequest[]
+  mapAccess          MapAccess[]
+
+  oauthClients       OauthClient[]
+  oauthRefreshTokens OauthRefreshToken[]
+  oauthAccessTokens  OauthAccessToken[]
+  oauthConsents      OauthConsent[]
 
   @@index([email])
 }
@@ -93,6 +117,9 @@ model Session {
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  oauthRefreshTokens OauthRefreshToken[]
+  oauthAccessTokens  OauthAccessToken[]
 
   @@index([userId])
 }
@@ -129,6 +156,182 @@ model Verification {
   @@index([identifier])
 }
 
+// --- OAuth for MCP clients (Better Auth jwt + mcp plugins) ---
+
+model Jwks {
+  id         String    @id @default(cuid())
+  publicKey  String
+  privateKey String
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?
+  alg        String?
+  crv        String?
+}
+
+model OauthClient {
+  id                               String    @id @default(cuid())
+  clientId                         String    @unique
+  clientSecret                     String?
+  clientDiscoveryId                String?
+  disabled                         Boolean?  @default(false)
+  skipConsent                      Boolean?
+  enableEndSession                 Boolean?
+  subjectType                      String?
+  scopes                           String[]
+  clientCredentialsScopes          String[]  @default([])
+  userId                           String?
+  createdAt                        DateTime? @default(now())
+  updatedAt                        DateTime? @updatedAt
+  name                             String?
+  uri                              String?
+  icon                             String?
+  contacts                         String[]
+  tos                              String?
+  policy                           String?
+  softwareId                       String?
+  softwareVersion                  String?
+  softwareStatement                String?
+  redirectUris                     String[]
+  postLogoutRedirectUris           String[]
+  backchannelLogoutUri             String?
+  backchannelLogoutSessionRequired Boolean?
+  tokenEndpointAuthMethod          String?
+  applicationType                  String?
+  jwks                             String?
+  jwksUri                          String?
+  grantTypes                       String[]
+  responseTypes                    String[]
+  requirePKCE                      Boolean?
+  dpopBoundAccessTokens            Boolean?  @default(false)
+  referenceId                      String?
+  metadata                         Json?
+
+  user          User?                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resources     OauthClientResource[]
+  refreshTokens OauthRefreshToken[]
+  accessTokens  OauthAccessToken[]
+  consents      OauthConsent[]
+
+  @@index([userId])
+}
+
+model OauthResource {
+  id                            String    @id @default(cuid())
+  identifier                    String    @unique
+  name                          String
+  accessTokenTtl                Int?
+  refreshTokenTtl               Int?
+  signingAlgorithm              String?
+  signingKeyId                  String?
+  allowedScopes                 String[]
+  customClaims                  Json?
+  dpopBoundAccessTokensRequired Boolean?  @default(false)
+  disabled                      Boolean?  @default(false)
+  createdAt                     DateTime? @default(now())
+  updatedAt                     DateTime? @updatedAt
+  policyVersion                 Int?      @default(1)
+  metadata                      Json?
+
+  clients OauthClientResource[]
+}
+
+model OauthClientResource {
+  id         String    @id @default(cuid())
+  clientId   String
+  resourceId String
+  metadata   Json?
+  createdAt  DateTime? @default(now())
+
+  client   OauthClient   @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  resource OauthResource @relation(fields: [resourceId], references: [identifier], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([resourceId])
+}
+
+model OauthRefreshToken {
+  id                      String    @id @default(cuid())
+  token                   String    @unique
+  clientId                String
+  sessionId               String?
+  userId                  String
+  referenceId             String?
+  authorizationCodeId     String?
+  resources               String[]
+  requestedUserInfoClaims String[]
+  expiresAt               DateTime?
+  createdAt               DateTime? @default(now())
+  revoked                 DateTime?
+  rotatedAt               DateTime?
+  rotationReplayResponse  String?
+  rotationReplayExpiresAt DateTime?
+  authTime                DateTime?
+  confirmation            Json?
+  scopes                  String[]
+
+  client       OauthClient        @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  session      Session?           @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessTokens OauthAccessToken[]
+
+  @@index([clientId])
+  @@index([sessionId])
+  @@index([userId])
+  @@index([authorizationCodeId])
+}
+
+model OauthAccessToken {
+  id                      String    @id @default(cuid())
+  token                   String?   @unique
+  clientId                String
+  sessionId               String?
+  userId                  String?
+  referenceId             String?
+  authorizationCodeId     String?
+  resources               String[]
+  requestedUserInfoClaims String[]
+  refreshId               String?
+  expiresAt               DateTime?
+  createdAt               DateTime? @default(now())
+  revoked                 DateTime?
+  confirmation            Json?
+  scopes                  String[]
+
+  client  OauthClient        @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  session Session?           @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  user    User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refresh OauthRefreshToken? @relation(fields: [refreshId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([sessionId])
+  @@index([userId])
+  @@index([authorizationCodeId])
+  @@index([refreshId])
+}
+
+model OauthConsent {
+  id                      String    @id @default(cuid())
+  clientId                String
+  userId                  String?
+  referenceId             String?
+  resources               String[]
+  requestedUserInfoClaims String[]
+  scopes                  String[]
+  createdAt               DateTime? @default(now())
+  updatedAt               DateTime? @updatedAt
+
+  client OauthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  user   User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([userId])
+}
+
+model OauthClientAssertion {
+  id        String   @id
+  expiresAt DateTime
+}
+
 model Map {
   id                 String        @id @default(cuid())
   slug               String        @unique
@@ -154,6 +357,7 @@ model Map {
   components     MapComposition[] @relation("parentMap")
   usedIn         MapComposition[] @relation("componentMap")
   coffeeChatRequests CoffeeChatRequest[]
+  access             MapAccess[]
 
   @@index([creatorId])
   @@index([visibility])
@@ -166,6 +370,8 @@ model Node {
   title     String
   order     Int
   parentId  String?
+  positionX Float?
+  positionY Float?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -207,6 +413,8 @@ model ContentBlock {
   title      String?
   body       String? // ai_text body / blog metadata JSON / pdf extract
   url        String? // youtube/blog canonical URL (validated, SSRF-hardened at write time)
+  durationSeconds Int? // real media length when known (looked up at write time); drives time estimates
+  optional        Boolean @default(false) // deep dive: counted apart from the lesson's core time
   // provenance (ai_text): model id, prompt hash, source block ids
   provenanceModel      String?
   provenancePromptHash String?
@@ -268,6 +476,24 @@ model UpdateProposal {
 
   @@index([compositionId])
   @@index([learnerId, status])
+}
+
+/** Private maps: a learner asks, the creator approves. Approved learners travel like it's public. */
+model MapAccess {
+  id        String       @id @default(cuid())
+  mapId     String
+  userId    String
+  status    AccessStatus @default(pending)
+  message   String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  map  Map  @relation(fields: [mapId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([mapId, userId])
+  @@index([userId])
+  @@index([mapId, status])
 }
 
 model Progress {
@@ -345,21 +571,6 @@ model GenerationJob {
   @@index([status, createdAt])
   @@index([mapId, nodeId])
   @@index([userId])
-}
-
-model Quota {
-  id        String   @id @default(cuid())
-  userId    String
-  kind      String // maps_per_day | sections_per_day | bot_msgs_per_day
-  used      Int      @default(0)
-  limit     Int
-  resetsAt  DateTime // UTC midnight
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, kind])
 }
 
 model KbPage {

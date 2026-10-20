@@ -24,13 +24,13 @@ class Settings(BaseSettings):
     ai_service_token: str
     ai_service_token_next: str | None = None
 
-    # --- Shared AI provider contract (identical env names in apps/web) ---
+    # --- Shared AI contract (identical env names in apps/web) ---
+    # The platform holds no model key; every call runs on the user's own key.
+    # mock: keyless users get deterministic output. Anything else: real models only.
     ai_provider: AiProvider = "mock"
     ai_model: str = "mock-model"
-    ai_api_key: str | None = None
-    ai_base_url: str | None = None  # enables Ollama / any OpenAI-compatible endpoint
 
-    # Per-task model routing (all fall back to ai_model)
+    # Per-task OpenRouter model routing for users on OpenRouter (all fall back to ai_model)
     ai_model_skeleton: str | None = None
     ai_model_section: str | None = None
     ai_model_chat: str | None = None
@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     # --- Embeddings ---
     embeddings_model: str = "mock-embeddings"
     embeddings_dimensions: int = 768
+    youtube_api_key: str | None = None
+
+    # --- Error reports (off when unset) ---
+    sentry_dsn: str | None = None
+    sentry_environment: str = "development"
 
     @field_validator("database_url")
     @classmethod
@@ -73,11 +78,4 @@ def load_settings() -> Settings:
         lines.append("")
         raise SystemExit("\n".join(lines)) from None
 
-    if settings.ai_provider != "mock" and not settings.ai_api_key:
-        raise SystemExit(
-            f"\nproblem: AI_PROVIDER={settings.ai_provider} but AI_API_KEY is not set\n"
-            "  cause: every non-mock provider needs a key\n"
-            "  fix:   set AI_API_KEY, or set AI_PROVIDER=mock (no key, deterministic output)\n"
-            f"  docs:  {DOCS}#ai-providers"
-        )
     return settings

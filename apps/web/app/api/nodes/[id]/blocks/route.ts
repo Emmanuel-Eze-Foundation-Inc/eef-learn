@@ -3,16 +3,18 @@ import { createId } from "@paralleldrive/cuid2";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { BLOCK_TYPES, blockUrlProblem, isBlockType } from "@/lib/blocks";
 import { problem, publicHttpUrlError } from "@/lib/map-author";
+import { mediaDurationSeconds } from "@/lib/media-duration";
 import { getSession } from "@/lib/session";
 
-const types = ["youtube", "blog", "ai_text", "pdf_extract", "flashcard", "quiz"] as const;
-
 const createSchema = z.object({
-  type: z.enum(types),
+  type: z.enum(BLOCK_TYPES),
   title: z.string().trim().max(160).optional(),
   body: z.string().max(20000).nullable().optional(),
   url: z.string().max(500).nullable().optional(),
+  /** position among the lesson's blocks; later blocks shift down */
+  insertAt: z.number().int().min(0).optional(),
 });
 
 const patchSchema = z.object({
@@ -20,6 +22,7 @@ const patchSchema = z.object({
   title: z.string().trim().max(160).nullable().optional(),
   body: z.string().max(20000).nullable().optional(),
   url: z.string().max(500).nullable().optional(),
+  optional: z.boolean().optional(),
   blockIndex: z.number().int().min(0).optional(),
 });
 
@@ -50,24 +53,35 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { node } = loaded;
 
   const url = parsed.data.url?.trim() || null;
-  if (url && (parsed.data.type === "youtube" || parsed.data.type === "blog")) {
-    const urlError = publicHttpUrlError(url);
+  if (url) {
+    const urlError = publicHttpUrlError(url) ?? blockUrlProblem(parsed.data.type, url);
     if (urlError) return problem(422, urlError);
   }
 
+  const durationSeconds = await mediaDurationSeconds(parsed.data.type, url);
   const versionBlocks = node.contentBlocks.filter((b) => b.mapVersion === node.map.version);
-  const blockIndex = versionBlocks.reduce((max, b) => Math.max(max, b.blockIndex), -1) + 1;
-  const block = await prisma.contentBlock.create({
-    data: {
-      id: `blk_${createId()}`,
-      nodeId: id,
-      blockIndex,
-      type: parsed.data.type,
-      title: parsed.data.title,
-      body: parsed.data.body ?? null,
-      url,
-      mapVersion: node.map.version,
-    },
+  const end = versionBlocks.reduce((max, b) => Math.max(max, b.blockIndex), -1) + 1;
+  const ordered = [...versionBlocks].sort((a, b) => a.blockIndex - b.blockIndex);
+  const at = parsed.data.insertAt;
+  const blockIndex = at !== undefined && at < ordered.length ? ordered[at]!.blockIndex : end;
+  const shifted = versionBlocks.filter((b) => b.blockIndex >= blockIndex).sort((a, b) => b.blockIndex - a.blockIndex);
+  const block = await prisma.$transaction(async (tx) => {
+    for (const b of shifted) {
+      await tx.contentBlock.update({ where: { id: b.id }, data: { blockIndex: b.blockIndex + 1 } });
+    }
+    return tx.contentBlock.create({
+      data: {
+        id: `blk_${createId()}`,
+        nodeId: id,
+        blockIndex,
+        type: parsed.data.type,
+        title: parsed.data.title,
+        body: parsed.data.body ?? null,
+        url,
+        durationSeconds,
+        mapVersion: node.map.version,
+      },
+    });
   });
   return NextResponse.json({ block }, { status: 201 });
 }
@@ -86,9 +100,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!block) return problem(404, "not found");
 
   if (parsed.data.url) {
-    const urlError = publicHttpUrlError(parsed.data.url);
+    const urlError =
+      publicHttpUrlError(parsed.data.url) ?? (isBlockType(block.type) ? blockUrlProblem(block.type, parsed.data.url) : null);
     if (urlError) return problem(422, urlError);
   }
+
+  const urlChanged = parsed.data.url !== undefined && parsed.data.url !== block.url;
+  const durationSeconds =
+    urlChanged && isBlockType(block.type) ? await mediaDurationSeconds(block.type, parsed.data.url ?? null) : undefined;
 
   const updated = await prisma.contentBlock.update({
     where: { id: block.id },
@@ -96,6 +115,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       title: parsed.data.title === undefined ? undefined : parsed.data.title,
       body: parsed.data.body === undefined ? undefined : parsed.data.body,
       url: parsed.data.url === undefined ? undefined : parsed.data.url,
+      durationSeconds,
+      optional: parsed.data.optional,
       blockIndex: parsed.data.blockIndex,
     },
   });

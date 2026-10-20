@@ -6,6 +6,7 @@ Design (PLAN.md M2, eng review A1/A2):
 - reaper: running jobs with a stale heartbeat return to queued (or fail at max attempts)
 - backoff: a re-queued job is not claimable until 2^attempts seconds after its last touch
 - checkpoints: append-only jsonb array the web client polls; idempotent via `step` keys
+- secrets: the payload's sealed userModel is dropped as soon as a job finishes or fails for good
 
 Handlers are registered per job kind; T5/T6 register skeleton/section pipelines.
 """
@@ -32,7 +33,7 @@ _handlers: dict[str, Handler] = {}
 
 
 class PermanentJobError(Exception):
-    """Raised by pipelines for errors that must NOT be retried (e.g. quota exceeded)."""
+    """Raised by pipelines for errors that must NOT be retried (e.g. no user model)."""
 
 
 def register_handler(kind: str, handler: Handler) -> None:
@@ -96,7 +97,7 @@ async def complete_job(pool: asyncpg.Pool, job_id: str, actual_cost_cents: int =
         """
         UPDATE "GenerationJob"
         SET status = 'succeeded'::"JobStatus", "actualCostCents" = $2,
-            error = NULL, "updatedAt" = now()
+            error = NULL, payload = payload - 'userModel', "updatedAt" = now()
         WHERE id = $1
         """,
         job_id,
@@ -111,6 +112,8 @@ async def fail_job(pool: asyncpg.Pool, job_id: str, error: str, permanent: bool 
         UPDATE "GenerationJob"
         SET status = CASE WHEN $3 OR attempts >= "maxAttempts"
                           THEN 'failed'::"JobStatus" ELSE 'queued'::"JobStatus" END,
+            payload = CASE WHEN $3 OR attempts >= "maxAttempts"
+                           THEN payload - 'userModel' ELSE payload END,
             error = $2, "claimedBy" = NULL, "heartbeatAt" = NULL, "updatedAt" = now()
         WHERE id = $1
         """,
@@ -127,6 +130,8 @@ async def reap_stale(pool: asyncpg.Pool) -> int:
         UPDATE "GenerationJob"
         SET status = CASE WHEN attempts >= "maxAttempts"
                           THEN 'failed'::"JobStatus" ELSE 'queued'::"JobStatus" END,
+            payload = CASE WHEN attempts >= "maxAttempts"
+                           THEN payload - 'userModel' ELSE payload END,
             error = COALESCE(error, 'worker lease expired'),
             "claimedBy" = NULL, "heartbeatAt" = NULL, "updatedAt" = now()
         WHERE status = 'running'::"JobStatus"

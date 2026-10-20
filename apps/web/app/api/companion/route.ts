@@ -3,9 +3,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { env } from "@/lib/env";
-import { consumeQuota } from "@/lib/quota";
+import { canTravel } from "@/lib/map-access";
 import { getSession } from "@/lib/session";
-import { getUserApiKey } from "@/lib/user-ai-key";
+import { modelRequired } from "@/lib/model-required";
+import { tutorSystemPrompt } from "@/lib/tutor";
+import { getUserModel } from "@/lib/user-ai-key";
 
 const bodySchema = z.object({
   mapId: z.string().min(1),
@@ -25,12 +27,8 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: "invalid body" }, { status: 422 });
   const { mapId, nodeId, message } = parsed.data;
 
-  if (!(await consumeQuota(session.user.id, "bot_msgs_per_day"))) {
-    return NextResponse.json(
-      { error: "You've used today's companion messages. They refresh at midnight UTC." },
-      { status: 429 },
-    );
-  }
+  const userModel = await getUserModel(session.user.id);
+  if (!userModel && env.AI_PROVIDER !== "mock") return modelRequired("ask the tutor");
 
   const map = await prisma.map.findUnique({
     where: { id: mapId },
@@ -39,7 +37,7 @@ export async function POST(req: Request) {
       progress: { where: { userId: session.user.id } },
     },
   });
-  if (!map || (map.visibility !== "public" && map.creatorId !== session.user.id)) {
+  if (!map || !(await canTravel(map, session.user.id))) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 
@@ -62,14 +60,13 @@ export async function POST(req: Request) {
 
   const mastered = map.progress.filter((p) => p.mastered).length;
   const currentNode = nodeId ? map.nodes.find((n) => n.id === nodeId) : undefined;
-  const system = [
-    `You are the EEF Learn companion — a warm, human study partner from the Emmanuel Eze Foundation.`,
-    `Learner: ${session.user.name}. Map: "${map.title}" (${mastered}/${map.nodes.length} stars mastered).`,
-    currentNode ? `They are currently at "${currentNode.title}".` : "",
-    `Help them understand what they're learning. Be concise and encouraging. If asked about EEF, explain it's a nonprofit (emmanuelezefoundation.org) helping anyone learn, connect, and get matched with helpers.`,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const system = tutorSystemPrompt({
+    learner: session.user.name,
+    mapTitle: map.title,
+    mastered,
+    total: map.nodes.length,
+    lessonTitle: currentNode?.title,
+  });
 
   const res = await fetch(`${env.AI_SERVICE_URL}/chat`, {
     method: "POST",
@@ -78,7 +75,7 @@ export async function POST(req: Request) {
       Authorization: `Bearer ${env.AI_SERVICE_TOKEN}`,
     },
     body: JSON.stringify({
-      userApiKey: await getUserApiKey(session.user.id),
+      userModel,
       messages: [
         { role: "system", content: system },
         ...history.map((m) => ({ role: m.role, content: m.content })),
@@ -86,7 +83,7 @@ export async function POST(req: Request) {
     }),
   }).catch(() => null);
   if (!res?.ok) {
-    return NextResponse.json({ error: "companion is unavailable right now" }, { status: 502 });
+    return NextResponse.json({ error: "Owlbert lost the signal. Try again in a moment." }, { status: 502 });
   }
   const { reply } = await res.json();
 

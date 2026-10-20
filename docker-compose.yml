@@ -64,6 +64,7 @@ services:
       AI_SERVICE_URL: http://ai:8000
       AI_SERVICE_TOKEN: dev-local-token
       AUTH_SECRET: dev-only-secret-change-me-0123456789
+      AUTH_URL: http://localhost:3000
       AI_PROVIDER: mock
       SMTP_URL: smtp://mailpit:1025
     depends_on:

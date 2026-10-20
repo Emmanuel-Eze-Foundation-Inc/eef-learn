@@ -8,9 +8,13 @@ export type StudioNode = {
   title: string;
   order: number;
   parentId: string | null;
+  positionX: number;
+  positionY: number;
 };
 
 export type StudioEdge = { fromId: string; toId: string };
+
+export type StudioBlock = { id: string; type: string };
 
 function layout(nodes: StudioNode[]): Map<string, { x: number; y: number }> {
   const pos = new Map<string, { x: number; y: number }>();

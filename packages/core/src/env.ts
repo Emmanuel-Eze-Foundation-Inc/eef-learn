@@ -4,16 +4,16 @@ const DOCS =
   "https://github.com/Emmanuel-Eze-Foundation-Inc/eef-learn/blob/main/docs/self-hosting.md";
 
 /**
- * Shared AI provider env contract (identical names in apps/ai settings.py).
- * One config, no dual-setup trap (PLAN.md M0).
+ * Shared AI env contract (identical names in apps/ai settings.py).
+ * The platform holds no model key: every AI call runs on the user's own key.
+ * AI_PROVIDER=mock lets keyless users get deterministic output (local dev, demos);
+ * any other value means real models only, on keys users bring.
  */
 export const aiProviderEnvSchema = z.object({
   AI_PROVIDER: z
     .enum(["mock", "openrouter", "openai", "anthropic", "google", "openai-compatible"])
     .default("mock"),
   AI_MODEL: z.string().default("mock-model"),
-  AI_API_KEY: z.string().optional(),
-  AI_BASE_URL: z.string().url().optional(),
   AI_MODEL_SKELETON: z.string().optional(),
   AI_MODEL_SECTION: z.string().optional(),
   AI_MODEL_CHAT: z.string().optional(),
@@ -37,6 +37,7 @@ export const webEnvSchema = aiProviderEnvSchema.extend({
   }),
   AUTH_EMAIL_VERIFICATION: z.enum(["on", "off"]).default("on"),
   AUTH_URL: z.string().url().default("http://localhost:3000"),
+  AUTH_TRUSTED_ORIGINS: z.string().optional(),
   SMTP_URL: z.string().optional(), // e.g. smtp://localhost:1025 (Mailpit); unset = log links to console
   EMAIL_FROM: z.string().default("EEF Learn <no-reply@eeflearn.local>"),
   GOOGLE_CLIENT_ID: z.string().optional(),
@@ -69,16 +70,7 @@ export function loadWebEnv(source: NodeJS.ProcessEnv = process.env): WebEnv {
     }
     throw new Error(lines.join("\n"));
   }
-  const env = parsed.data;
-  if (env.AI_PROVIDER !== "mock" && !env.AI_API_KEY) {
-    throw new Error(
-      `problem: AI_PROVIDER=${env.AI_PROVIDER} but AI_API_KEY is not set\n` +
-        `  cause: every non-mock provider needs a key\n` +
-        `  fix:   set AI_API_KEY, or AI_PROVIDER=mock (no key needed)\n` +
-        `  docs:  ${DOCS}#ai-providers`,
-    );
-  }
-  return env;
+  return parsed.data;
 }
 
 /** Per-task model routing with fallback to AI_MODEL (gate T-2: OpenRouter per-task routing). */

@@ -12,6 +12,21 @@ export type GraphLink = {
   kind?: string;
 };
 
+export type Compass = "up" | "down" | "left" | "right";
+
+export type Point = { x: number; y: number };
+
+export const LAYOUT_COL = 300;
+export const LAYOUT_ROW = 104;
+export const LAYOUT_INDENT = 20;
+export const LAYOUT_ORIGIN_X = 0;
+export const LAYOUT_ORIGIN_Y = 0;
+
+export type PositionedNode = TreeNode & {
+  positionX?: number | null;
+  positionY?: number | null;
+};
+
 export type SkeletonNode = {
   slug: string;
   title: string;
@@ -234,6 +249,104 @@ export function validateSkeleton(data: { nodes?: unknown; edges?: unknown }): st
   if (errors.length) return unique(errors);
   errors.push(...prerequisiteErrors(treeNodes, links));
   return unique(errors);
+}
+
+/**
+ * Course layout: modules as columns, each module's lessons stacked under it in
+ * travel order and indented by depth. A single root with children is the
+ * intro, centred above the modules. Mirrored in apps/ai `_layout_positions`.
+ */
+export function layoutTree<T extends TreeNode>(nodes: T[]): Map<string, Point> {
+  const pos = new Map<string, Point>();
+  const flat = flattenTree(nodes);
+  const childrenOf = (id: string | null) => flat.filter((n) => n.parentId === id);
+  const descendants = (id: string): T[] =>
+    childrenOf(id).flatMap((child) => [child, ...descendants(child.id)]);
+
+  const roots = childrenOf(null);
+  const intro = roots.length === 1 && childrenOf(roots[0]!.id).length ? roots[0]! : null;
+  const modules = intro ? childrenOf(intro.id) : roots;
+  const top = LAYOUT_ORIGIN_Y + (intro ? LAYOUT_ROW * 1.5 : 0);
+  if (intro) {
+    pos.set(intro.id, { x: LAYOUT_ORIGIN_X + ((modules.length - 1) * LAYOUT_COL) / 2, y: LAYOUT_ORIGIN_Y });
+  }
+  modules.forEach((head, i) => {
+    const x = LAYOUT_ORIGIN_X + i * LAYOUT_COL;
+    pos.set(head.id, { x, y: top });
+    const headDepth = nodeDepth(nodes, head.id);
+    descendants(head.id).forEach((lesson, j) => {
+      pos.set(lesson.id, {
+        x: x + (nodeDepth(nodes, lesson.id) - headDepth - 1) * LAYOUT_INDENT,
+        y: top + LAYOUT_ROW * (1.4 + j),
+      });
+    });
+  });
+  return pos;
+}
+
+export function resolvePositions<T extends PositionedNode>(nodes: T[]): Map<string, Point> {
+  const laid = layoutTree(nodes);
+  const out = new Map<string, Point>();
+  for (const node of nodes) {
+    if (typeof node.positionX === "number" && typeof node.positionY === "number") {
+      out.set(node.id, { x: node.positionX, y: node.positionY });
+    } else {
+      out.set(node.id, laid.get(node.id) ?? { x: LAYOUT_ORIGIN_X, y: LAYOUT_ORIGIN_Y });
+    }
+  }
+  return out;
+}
+
+export function compassOf(from: Point, to: Point): Compass {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? "right" : "left";
+  return dy >= 0 ? "down" : "up";
+}
+
+/** Parent, children, siblings, and prerequisite links. */
+export function graphNeighborIds(
+  nodeId: string,
+  nodes: TreeNode[],
+  edges: GraphLink[],
+): string[] {
+  const node = nodes.find((n) => n.id === nodeId);
+  const ids = new Set<string>();
+  if (!node) return [];
+  if (node.parentId) ids.add(node.parentId);
+  for (const other of nodes) {
+    if (other.parentId === nodeId) ids.add(other.id);
+    if (other.parentId === node.parentId && other.id !== nodeId) {
+      ids.add(other.id);
+    }
+  }
+  for (const edge of edges) {
+    if ((edge.kind ?? "prerequisite") !== "prerequisite") continue;
+    if (edge.fromId === nodeId) ids.add(edge.toId);
+    if (edge.toId === nodeId) ids.add(edge.fromId);
+  }
+  ids.delete(nodeId);
+  return [...ids];
+}
+
+export function nearestNeighborInDirection(
+  nodeId: string,
+  direction: Compass,
+  nodes: PositionedNode[],
+  edges: GraphLink[],
+  positions = resolvePositions(nodes),
+): string | null {
+  const here = positions.get(nodeId);
+  if (!here) return null;
+  let best: { id: string; dist: number } | null = null;
+  for (const id of graphNeighborIds(nodeId, nodes, edges)) {
+    const there = positions.get(id);
+    if (!there) continue;
+    if (compassOf(here, there) !== direction) continue;
+    const dist = Math.hypot(there.x - here.x, there.y - here.y);
+    if (!best || dist < best.dist) best = { id, dist };
+  }
+  return best?.id ?? null;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
