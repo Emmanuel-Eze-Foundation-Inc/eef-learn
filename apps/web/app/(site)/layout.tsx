@@ -13,7 +13,7 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Emmanuel Eze Foundation",
   description:
-    "Anyone can learn anything. Nobody should do it alone. Free learning maps and a human community from the Emmanuel Eze Foundation.",
+    "From 100 children in Makoko to eight free bootcamps to EEF Learn: free learning maps for every age, from the Emmanuel Eze Foundation.",
   icons: {
     icon: [{ url: "/brand/eef-favicon-32.png", sizes: "32x32", type: "image/png" }],
     apple: "/brand/eef-apple-touch-180.png",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Emmanuel Eze Foundation",
     description:
-      "Anyone can learn anything. Nobody should do it alone. Free learning maps and a human community from the Emmanuel Eze Foundation.",
+      "From 100 children in Makoko to eight free bootcamps to EEF Learn: free learning maps for every age, from the Emmanuel Eze Foundation.",
     images: [{ url: "/brand/eef-og-1200x630.png", width: 1200, height: 630 }],
   },
   twitter: {

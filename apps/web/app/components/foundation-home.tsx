@@ -2,6 +2,7 @@ import { ArrowRight, ArrowUpRight, CalendarDays, Compass, HandHelping, MessagesS
 import Link from "next/link";
 import type { ComponentType } from "react";
 
+import { Timeline } from "@/components/ui/timeline";
 import {
   FOUNDER_NAME,
   FOUNDER_PHOTO,
@@ -24,6 +25,7 @@ import { EefLockup } from "./eef-lockup";
 import { FoundationNav } from "./foundation-nav";
 import { SOCIAL_ICONS, SocialLinkRow } from "./foundation-socials";
 import { InvolveForms } from "./involve-forms";
+import { MakokoGallery } from "./makoko-gallery";
 import { UnseenEngineSponsor } from "./unseen-engine-sponsor";
 
 const H2 = "text-[30px] font-bold leading-[1.12] tracking-[-0.025em] text-balance sm:text-[40px]";
@@ -31,34 +33,25 @@ const LEAD = "text-[17px] leading-[1.65] text-star-300 sm:text-[18px]";
 const PILL =
   "inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-[15px] font-semibold transition-colors duration-200";
 
-const PROMISES = ["Free for every family", "Run by volunteers", "Open source"];
+const PROMISES = ["Free for every learner", "Run by volunteers", "Open source"];
 
 const SHOWN_TYPES: BlockType[] = ["youtube", "ai_text", "code", "quiz", "flashcard", "pdf_extract"];
 
 const STATS = [
-  { value: "8", label: "free tech bootcamps run" },
-  { value: "1,000+", label: "children taught, ages 8 to 19" },
-  { value: "Free", label: "for every child. Comparable bootcamps charge $2,500" },
-  { value: "1M", label: "completed learning maps by 2035" },
+  { value: "100", label: "children in Makoko given tuition, meals, and computer training" },
+  { value: "8", label: "free tech bootcamps, where comparable ones charge $2,500" },
+  { value: "912", label: "bootcamp students, ages 8 to 19" },
+  { value: "1M", label: "learners of every age: the goal for EEF Learn by 2035" },
 ];
 
-const CHAPTERS = [
-  {
-    title: "Food and school",
-    body: "The foundation began by putting meals and schooling within reach of children who had neither. That is still the reason for everything after it.",
-    tone: "done",
-  },
-  {
-    title: "Eight free bootcamps",
-    body: "Twelve-week programs in math, coding, and design for ages 8 to 19. Eight cohorts, more than a thousand children, no tuition.",
-    tone: "done",
-  },
-  {
-    title: "EEF Learn, and a million maps",
-    body: "The bootcamp, opened to everyone. Free learning maps anyone can build or follow, with the aim of one million completed by 2035.",
-    tone: "next",
-  },
-] as const;
+const MAKOKO_PHOTOS = [
+  { file: "7553", alt: "A volunteer stepping between canoes with a box of food" },
+  { file: "7527", alt: "A girl paddling a canoe with a bowl of food beside her" },
+  { file: "7490", alt: "Two foundation volunteers on the lagoon in Makoko" },
+  { file: "9157", alt: "A student holding a computer training certificate beside a volunteer" },
+];
+
+const ALL_AGES = ["Teenagers getting ahead", "Adults changing careers", "Parents learning beside their kids", "Retirees starting something new"];
 
 type Door = {
   title: string;
@@ -149,9 +142,10 @@ export function FoundationHome({ maps, posts }: { maps: PublicMap[]; posts: Foun
               Anyone can learn anything. Nobody should do it alone.
             </h1>
             <p className="mt-7 max-w-[52ch] text-[17px] leading-[1.65] text-star-300 sm:text-[19px] lg:max-w-[44ch] xl:max-w-[52ch]">
-              The Emmanuel Eze Foundation started with meals and classrooms, then ran eight free
-              tech bootcamps for children 8 to 19. Now it builds EEF Learn: free, open-source
-              learning maps anyone can follow, with people to learn alongside.
+              We started in Makoko, Lagos, paying school fees, bringing food, and putting 100
+              children through computer training. Then 912 students came through eight free tech
+              bootcamps. Now EEF Learn opens the same classroom to every age: free, open-source
+              learning maps for teenagers, working adults, and anyone ready to start.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Link href="/learn" className={`${PILL} bg-aurora-400 text-ink-900 hover:bg-aurora-400/90`}>
@@ -201,37 +195,115 @@ export function FoundationHome({ maps, posts }: { maps: PublicMap[]; posts: Foun
         </dl>
       </section>
 
-      <section id="mission" aria-labelledby="story-heading" className={`${PAGE_SHELL} scroll-mt-24 py-24 lg:py-32`}>
+      <section id="mission" aria-labelledby="story-heading" className={`${PAGE_SHELL} scroll-mt-24 pt-24 lg:pt-32`}>
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end lg:gap-16">
           <h2 id="story-heading" className={H2}>
-            From meals and classrooms to a million maps.
+            From 100 children in Makoko to a million learners of every age.
           </h2>
           <p className={`max-w-[56ch] ${LEAD}`}>
-            The work widened without changing what it is for: children who start with less still
-            get to learn. Now anyone with a connection can, too.
+            Each chapter reached further than the last without changing what the work is for:
+            people who start with less still get to learn. First children, then teenagers, and
+            now anyone, at any age.
           </p>
         </div>
-        <ol className="relative mt-16 grid gap-10 md:grid-cols-3 md:gap-8">
-          <span aria-hidden className="absolute top-[7px] right-0 left-0 hidden h-px bg-night-800 md:block" />
-          <span
-            aria-hidden
-            className="absolute top-[7px] left-[66%] hidden h-px w-[34%] border-t-2 border-dashed border-gold-400 bg-transparent md:block"
-          />
-          {CHAPTERS.map((chapter) => (
-            <li key={chapter.title} className="relative pl-8 md:pl-0">
-              <span aria-hidden className="absolute top-[7px] bottom-[-40px] left-[7px] w-px bg-night-800 md:hidden" />
-              <span
-                aria-hidden
-                className={cn(
-                  "absolute top-0 left-0 size-[15px] rounded-full border-[3px] border-night-950 md:relative md:block",
-                  chapter.tone === "done" ? "bg-aurora-400" : "bg-gold-400",
-                )}
-              />
-              <h3 className="text-xl font-semibold tracking-tight md:mt-7">{chapter.title}</h3>
-              <p className="mt-3 max-w-[40ch] leading-relaxed text-star-300">{chapter.body}</p>
-            </li>
-          ))}
-        </ol>
+        <Timeline
+          className="mt-4"
+          data={[
+            {
+              eyebrow: "2021 · Lagos, Nigeria",
+              title: "Makoko",
+              content: (
+                <div key="makoko">
+                  <p className={`max-w-[56ch] ${LEAD}`}>
+                    Makoko is a fishing community built on stilts over the Lagos Lagoon. We started
+                    there with 100 children. We paid their school fees, brought food to their homes
+                    by canoe, and paid for every one of them to finish a computer training course.
+                  </p>
+                  <ul className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {MAKOKO_PHOTOS.map((photo) => (
+                      <li key={photo.file} className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-night-900">
+                        <img
+                          src={`/foundation/makoko/makoko-${photo.file}.jpg`}
+                          alt={photo.alt}
+                          width={1200}
+                          height={1600}
+                          loading="lazy"
+                          className="absolute inset-0 size-full object-cover"
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                  <a href="#makoko" className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-aurora-400 hover:underline">
+                    See the Makoko gallery <ArrowRight className="size-4" aria-hidden />
+                  </a>
+                </div>
+              ),
+            },
+            {
+              eyebrow: "Eight cohorts",
+              title: "Bootcamps",
+              content: (
+                <div key="bootcamps">
+                  <p className={`max-w-[56ch] ${LEAD}`}>
+                    Next came eight free tech bootcamps: twelve-week programs in math, coding, and
+                    design for ages 8 to 19. Comparable bootcamps charge $2,500. Ours cost families
+                    nothing.
+                  </p>
+                  <dl className="mt-8 grid max-w-xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-night-800 bg-night-800">
+                    <div className="flex flex-col-reverse gap-2 bg-night-950 p-6">
+                      <dt className="text-sm text-star-300">students taught</dt>
+                      <dd className="text-[44px] leading-none font-bold tracking-[-0.03em] tabular-nums">912</dd>
+                    </div>
+                    <div className="flex flex-col-reverse gap-2 bg-night-950 p-6">
+                      <dt className="text-sm text-star-300">tuition, every cohort</dt>
+                      <dd className="text-[44px] leading-none font-bold tracking-[-0.03em] tabular-nums">$0</dd>
+                    </div>
+                  </dl>
+                </div>
+              ),
+            },
+            {
+              eyebrow: "Now",
+              title: "EEF Learn",
+              content: (
+                <div key="learn">
+                  <p className={`max-w-[56ch] ${LEAD}`}>
+                    The bootcamp had an age limit. EEF Learn does not stop at 19. It is the same free
+                    classroom, opened to everyone, with a goal of one million learners by 2035.
+                  </p>
+                  <ul className="mt-8 flex flex-wrap gap-2" aria-label="Who EEF Learn is for">
+                    {ALL_AGES.map((who) => (
+                      <li key={who} className="rounded-full border border-night-800 bg-night-900 px-3.5 py-1.5 text-sm">
+                        {who}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link href="/learn" className={`${PILL} mt-8 bg-aurora-400 text-ink-900 hover:bg-aurora-400/90`}>
+                    Start learning on EEF Learn <ArrowRight className="size-4" aria-hidden />
+                  </Link>
+                </div>
+              ),
+            },
+          ]}
+        />
+      </section>
+
+      <section id="makoko" aria-labelledby="makoko-heading" className={`${PAGE_SHELL} scroll-mt-24 py-24 lg:py-32`}>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end lg:gap-16">
+          <div>
+            <p className="font-mono text-xs tracking-[0.08em] text-gold-400 uppercase">The Makoko project</p>
+            <h2 id="makoko-heading" className={`mt-3 ${H2}`}>
+              Where the work started, in pictures.
+            </h2>
+          </div>
+          <p className={`max-w-[56ch] ${LEAD}`}>
+            School fees paid, food brought to the door by canoe, and a computer course paid for all
+            the way to the certificate. Tap any photo to see it larger.
+          </p>
+        </div>
+        <div className="mt-12">
+          <MakokoGallery />
+        </div>
       </section>
 
       <section aria-labelledby="learn-heading" className={`${PAGE_SHELL} pb-24 lg:pb-32`}>
@@ -246,12 +318,13 @@ export function FoundationHome({ maps, posts }: { maps: PublicMap[]; posts: Foun
           <div className="relative grid gap-12 p-7 sm:p-12 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center lg:gap-14 lg:p-16">
             <div className="min-w-0">
               <h2 id="learn-heading" className={H2}>
-                EEF Learn is the bootcamp, open to everyone.
+                EEF Learn is the bootcamp, open to every age.
               </h2>
               <p className="mt-6 max-w-[52ch] text-[17px] leading-[1.65] text-star-400">
-                Name a topic and a course agent researches it, lays out the modules, and fills
-                each lesson with the best free material, every source credited. Creators shape
-                it by hand. Learners see the whole route and keep one lesson in focus.
+                Whether you are 13 or 73, name a topic and a course agent researches it, lays out
+                the modules, and fills each lesson with the best free material, every source
+                credited. Creators shape it by hand. Learners see the whole route and keep one
+                lesson in focus.
               </p>
               <ul className="mt-8 flex flex-wrap gap-2" aria-label="Lesson content types">
                 {SHOWN_TYPES.map((type) => {
@@ -361,9 +434,10 @@ export function FoundationHome({ maps, posts }: { maps: PublicMap[]; posts: Foun
             {FOUNDER_NAME} started this so nobody learns alone.
           </h2>
           <p className={`mt-6 max-w-[58ch] ${LEAD}`}>
-            He is the founder and president of the Emmanuel Eze Foundation. The work began with meals
-            and school for children who had neither, grew into eight free tech bootcamps, and is now
-            EEF Learn. He still writes the software the foundation runs on.
+            He is the founder and president of the Emmanuel Eze Foundation. The work began in
+            Makoko, Lagos, with school fees, food, and computer training for 100 children. It grew
+            into eight free tech bootcamps for 912 students, and is now EEF Learn, built for
+            learners of every age. He still writes the software the foundation runs on.
           </p>
           <p className={`mt-4 max-w-[58ch] ${LEAD}`}>
             From Washington, DC he also founded Unseen Engine, the engineering studio that builds and
@@ -506,6 +580,9 @@ export function FoundationHome({ maps, posts }: { maps: PublicMap[]; posts: Foun
           <nav aria-label="Footer" className="flex flex-col gap-3 text-sm text-star-400">
             <a className="hover:text-star-100" href="#mission">
               Our story
+            </a>
+            <a className="hover:text-star-100" href="#makoko">
+              Makoko gallery
             </a>
             <Link className="hover:text-star-100" href="/learn">
               EEF Learn

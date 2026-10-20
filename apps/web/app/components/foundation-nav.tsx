@@ -12,6 +12,7 @@ const navLink = "text-[15px] font-medium text-star-300 transition-colors hover:t
 
 const LINKS = [
   { label: "Our story", href: "/#mission" },
+  { label: "Makoko", href: "/#makoko" },
   { label: "EEF Learn", href: "/learn" },
   { label: "Founder", href: "/#founder" },
   { label: "Follow", href: "/#follow" },

@@ -21,11 +21,13 @@ import { LearnLockup } from './learn-lockup';
 import { UnseenEngineSponsor } from './unseen-engine-sponsor';
 
 const TOPICS = [
-  'Linear algebra for machine learning',
-  'How to read a balance sheet',
   'Intro to Python, from zero',
+  'How to read a balance sheet',
+  'Starting a small business, step by step',
   'Photosynthesis, explained properly',
+  'Spreadsheets for work, from scratch',
   'Building AI agents that actually work',
+  'Spanish for adult beginners',
 ];
 
 /** the hero map frame is 16:11 on desktop */
@@ -149,6 +151,11 @@ export function LandingView({
               Name a topic and a course agent builds the path: modules
               first, then lessons filled with videos, readings, code,
               quizzes and flashcards, every source credited.
+            </p>
+            <p className="mt-3 max-w-[46ch] leading-relaxed text-star-300">
+              For anyone 13 or older: a student getting ahead, an adult
+              changing careers, or someone finally learning the thing
+              they always meant to.
             </p>
             <div className="mt-8">
               <TopicInput onBuild={build} />
@@ -290,9 +297,12 @@ export function LandingView({
               </h2>
               <p className="mt-5 max-w-[50ch] leading-relaxed text-star-400">
                 EEF Learn is a public good from the Emmanuel Eze
-                Foundation. Self-host it, fork it, bring your own
-                model. We compete on community and credit, not on who
-                owns the content.
+                Foundation, which began by putting 100 children in
+                Makoko, Lagos through school and computer training,
+                then taught 912 students in eight free bootcamps. EEF
+                Learn takes that work to learners of every age, with a
+                goal of one million. Self-host it, fork it, bring your
+                own model.
               </p>
               <Button
                 asChild
