@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Outfit } from "next/font/google";
-
 const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-outfit",
@@ -35,7 +34,6 @@ export const metadata: Metadata = {
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
-      data-theme="light"
       data-foundation=""
       className={`${outfit.variable} ${jetbrains.variable} ${outfit.className} flex min-h-dvh w-full min-w-0 flex-1 flex-col overflow-x-clip bg-night-950 text-star-100`}
     >

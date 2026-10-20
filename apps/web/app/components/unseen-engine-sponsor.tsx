@@ -29,7 +29,7 @@ export function UnseenEngineSponsor({
         </div>
         <div className="min-w-0">
           <p className="text-xl font-semibold">Unseen Engine</p>
-          <p className="mt-2 max-w-[52ch] text-[15px] leading-relaxed text-[#3e4a43]">
+          <p className="mt-2 max-w-[52ch] text-[15px] leading-relaxed text-star-300">
             Official sponsor of EEF Learn. The studio designs, builds, and stays on the systems
             behind the maps, so the foundation can keep them open.
           </p>

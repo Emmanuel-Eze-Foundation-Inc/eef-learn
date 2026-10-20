@@ -14,12 +14,26 @@ export const FOUNDATION_SOCIALS = [
   {
     name: "Instagram",
     href: "https://www.instagram.com/emmanuelezefoundation_/",
+    handle: "@emmanuelezefoundation_",
+    about: "Photos from cohorts and events",
   },
-  { name: "X", href: "https://x.com/emmanuelezef" },
-  { name: "Facebook", href: "https://www.facebook.com/emmanuelezefoundation" },
+  { name: "X", href: "https://x.com/emmanuelezef", handle: "@emmanuelezef", about: "Updates as they happen" },
+  {
+    name: "Facebook",
+    href: "https://www.facebook.com/emmanuelezefoundation",
+    handle: "Emmanuel Eze Foundation",
+    about: "News for families and partners",
+  },
   {
     name: "LinkedIn",
     href: "https://www.linkedin.com/company/emmanuel-eze-foundation",
+    handle: "Emmanuel Eze Foundation",
+    about: "Partnerships and volunteer roles",
   },
-  { name: "Medium", href: "https://medium.com/@emmanuelezefoundation" },
+  {
+    name: "Medium",
+    href: "https://medium.com/@emmanuelezefoundation",
+    handle: "@emmanuelezefoundation",
+    about: "Longer writing from the team",
+  },
 ] as const;

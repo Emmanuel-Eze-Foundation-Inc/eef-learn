@@ -28,15 +28,16 @@ export function LearnNav({
       <Link href="/learn" className="flex shrink-0 items-center">
         <LearnLockup />
       </Link>
-      <div className="flex items-center gap-4 text-sm whitespace-nowrap text-star-400 sm:gap-5">
+      <div className="flex items-center gap-3 text-sm whitespace-nowrap text-star-400 sm:gap-5">
         <a className="hidden hover:text-star-100 sm:inline" href="/learn#how">
           How it works
         </a>
         <Link
           href="/community"
-          className={cn("hover:text-star-100", active === "community" && "text-star-100")}
+          className={cn("hidden hover:text-star-100 min-[360px]:inline", active === "community" && "text-star-100")}
         >
-          Community maps
+          <span className="sm:hidden">Maps</span>
+          <span className="hidden sm:inline">Community maps</span>
         </Link>
         <a
           className="hidden hover:text-star-100 md:inline"

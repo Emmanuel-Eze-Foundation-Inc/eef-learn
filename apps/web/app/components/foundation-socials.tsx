@@ -12,7 +12,7 @@ import type { FoundationPost } from "@/lib/foundation-feed";
 
 import { XTimeline } from "./x-timeline";
 
-const icons: Record<(typeof FOUNDATION_SOCIALS)[number]["name"], ComponentType<{ className?: string; weight?: "regular" | "bold" }>> = {
+export const SOCIAL_ICONS: Record<(typeof FOUNDATION_SOCIALS)[number]["name"], ComponentType<{ className?: string; weight?: "regular" | "bold" }>> = {
   Instagram: InstagramLogo,
   X: XLogo,
   Facebook: FacebookLogo,
@@ -24,7 +24,7 @@ export function FoundationSocials({ posts }: { posts: FoundationPost[] }) {
   return (
     <aside id="follow" className="min-w-0 scroll-mt-24">
       <h2 className="text-[28px] font-bold tracking-[-0.02em] sm:text-[34px]">Follow the work</h2>
-      <p className="mt-4 max-w-[46ch] text-[17px] leading-relaxed text-[#3e4a43]">
+      <p className="mt-4 max-w-[46ch] text-[17px] leading-relaxed text-star-300">
         Real posts from the foundation accounts. Nothing here is invented for the page.
       </p>
       <SocialLinkRow />
@@ -49,7 +49,7 @@ export function FoundationSocials({ posts }: { posts: FoundationPost[] }) {
           ))}
         </ol>
       ) : (
-        <p className="mt-6 text-sm text-[#3e4a43]">
+        <p className="mt-6 text-sm text-star-300">
           Writing will land here when a post is live. The accounts above are current.
         </p>
       )}
@@ -65,7 +65,7 @@ export function SocialLinkRow({ tone = "paper" }: { tone?: "paper" | "night" }) 
   return (
     <ul className="mt-6 flex flex-wrap gap-2">
       {FOUNDATION_SOCIALS.map((social) => {
-        const Icon = icons[social.name];
+        const Icon = SOCIAL_ICONS[social.name];
         return (
           <li key={social.name}>
             <a
