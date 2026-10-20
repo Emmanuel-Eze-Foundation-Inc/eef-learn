@@ -20,3 +20,20 @@ Key routing rules:
 - Save progress → invoke /context-save
 - Resume context → invoke /context-restore
 - Author a backlog-ready spec/issue → invoke /spec
+
+## Deploy Configuration (configured by /setup-deploy)
+- Platform: Vercel (web, `apps/web/vercel.json`) + Google Cloud Run (AI service `eef-ai`, `docker/ai.Dockerfile`) + Neon Postgres. Runbook: `docs/deploy.md`
+- Production URL: `https://learn.emmanuelezefoundation.org`
+- Deploy workflow: Vercel deploys staging on merge to `dev` and production on merge of `dev` into `main`; a person deploys the AI service with `gcloud run deploy` (see runbook)
+- Deploy status command: HTTP health check
+- Merge method: squash
+- Project type: web app
+- Post-deploy health check: `https://learn.emmanuelezefoundation.org/api/health` (`ok`, `db` and `ai` all true)
+
+### Custom deploy hooks
+- Pre-merge: `pnpm verify`
+- Deploy trigger: Vercel GitHub integration (web); manual `gcloud run deploy` (AI service)
+- Deploy status: poll production URL
+- Health check: `https://learn.emmanuelezefoundation.org/api/health`
+
+Read `AGENTS.md` first: it is the project guide for every agent (Claude Code, Cursor, Codex).

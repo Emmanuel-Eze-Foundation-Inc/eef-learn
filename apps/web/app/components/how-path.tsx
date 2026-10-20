@@ -93,6 +93,7 @@ export function HowPath() {
       return () => mq.removeEventListener("change", apply);
     }
     if (!("IntersectionObserver" in window)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time fallback for browsers without IntersectionObserver
       setVisible(true);
       return () => mq.removeEventListener("change", apply);
     }

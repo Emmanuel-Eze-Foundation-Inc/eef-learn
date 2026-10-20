@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Runs the same checks as the pull request pipeline before anything leaves this machine.
+# Skip once, knowingly, with: git push --no-verify
+set -e
+if command -v pnpm >/dev/null && grep -q '"verify"' package.json 2>/dev/null; then
+  echo "pre-push: pnpm verify"
+  pnpm verify
+fi

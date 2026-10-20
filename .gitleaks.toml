@@ -1,0 +1,13 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Placeholder values in tests and generated lockfiles"
+paths = [
+  '''packages/core/src/env\.test\.ts''',
+  '''pnpm-lock\.yaml''',
+  '''apps/ai/uv\.lock''',
+  '''node_modules''',
+  '''\.next''',
+  '''\.venv''',
+]

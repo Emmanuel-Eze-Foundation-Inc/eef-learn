@@ -3,6 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": ["DATABASE_URL", "AUTH_*", "AI_*", "EMAIL_FROM", "EMBEDDINGS_*", "GOOGLE_CLIENT_*", "SMTP_URL", "SENTRY_*", "NEXT_PUBLIC_*"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "dev": {

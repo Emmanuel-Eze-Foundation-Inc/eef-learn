@@ -12,10 +12,18 @@
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
+    "test:ai": "cd apps/ai && uv run ruff check . && uv run pytest -q",
+    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm test:ai && pnpm build",
     "db:migrate": "pnpm --filter @eef/db migrate:dev",
     "db:seed": "pnpm --filter @eef/db seed"
   },
   "devDependencies": {
     "turbo": "^2.3.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "sharp": "^0.35.5",
+      "deepmerge-ts": "^8.0.2"
+    }
   }
 }

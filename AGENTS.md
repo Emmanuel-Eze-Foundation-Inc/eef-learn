@@ -1,16 +1,15 @@
 ## Learned User Preferences
 
 - Ship work ticket-by-ticket: build, review, QA, then push and merge to `dev`. `dev` is the integration/staging branch; `main` is publish-only.
-- Opening a learning map should put the learner inside a 3D travel world, not a normal document page. Scroll travels stage-to-stage. The map path should wrap the current beat on left and right, connecting previous and next at the content edges (vertebra/root, not behind the card); distant nodes stay visible. A side map still jumps between nodes.
-- Keep the current beat in focus (ADHD-friendly). 3D motion should draw the learner in as they progress, including mixed content types such as YouTube.
-- Mini-map nodes should show the actual content type, not generic stars. Hover for a description; click to enter learn mode. The active beat is the 3D center stage, with previous/next around it. Start and end nodes should be clearly labeled. Completed nodes should come alive on the side map; uncompleted nodes should show an incomplete state.
-- Keep travel animated. Arrow keys (up/down/left/right) control the map. On long-form beats, arrows scroll the content first; advancing takes an extra scroll past the end (same at the top, with a cue). Show a creative scroll-affordance so long content does not look cut off. Optional click-to-continue is fine. Blend edges instead of hard cuts.
-- Map completion should be animated, then prompt the user to go back to maps.
+- The learning environment is a total rebuild (replacing the old 3D travel world): a combination of a graph map (nodes connecting in all directions) and a traditional module/lesson LMS course, keeping module and content hierarchy. It must be a powerful, robust learning environment that handles every content type.
+- Keep the current lesson in focus (ADHD-friendly). Map nodes show the actual content type, with start/end clearly labeled and completed vs incomplete states visible. Map completion should be animated, then prompt the user to go back to maps.
+- Build premium UI with the purchased Mobbin, Aceternity, and shadcn tools: install and use real components rather than hand-rolled look-alikes. Keep the green night-sky look as the dark theme, and keep both themes easy on the eye and easy to read.
+- Course creation is agent-driven, modeled on the Assemble workflow builder but for courses: a course-creation skill/agent researches the web, creates modules first, then fills each with videos (YouTube), text, quizzes, and other elements. Creators can still build from scratch, edit individual blocks, define parent-child relationships, review, publish, and enter. The agent must follow the EEF Learn Map Creation Protocol (`docs/protocol/map-creation.md`, prompts in `packages/protocol/prompts`). Courses should pair hands-on tutorial videos with talks and panels for deeper learning.
+- Course studio has switchable Chat / Map / Document modes. The map view must avoid overlapping nodes and duplicate edge lines, keep controls visible on dark backgrounds, and be scrollable. Every content type must be creatable.
 - Market Unseen Engine (myunseenengine.com) as sponsor instead of an in-map coffee-chat option. Treat it as a standout ad (paper-on-night billboard on the landing); use the real Unseen Engine mark as the logo. It is also the official sponsor on the Foundation site.
 - Community maps should lead with search and combine hemisphere/globe with a list. Cards show that map’s real nodes plus title, description, and publisher; the atlas/board wall should feel maplike with nodes.
 - Landing page: sticky night-sky nav; hero with a topic field and two actions — Watch it build, and View community maps (the latter goes to the community maps page, not an in-page section). Sticky constellation on the right, stacking under the hero on mobile. How-it-works is an animated path matching real travel and creation (create or pick a map, enter, learn), using path language (e.g. “The sky is the syllabus”), not generic cards or heavy star-talk. Preview is free; Enter map needs an account. Close with open-source plus a second topic form.
 - Foundation site: tell the evolution from food and education to bootcamps (8 bootcamps, 1k+ children) to a 1M completed-maps-by-2035 vision. No donate button — partnership and volunteer-to-lead-a-series / host-a-community-event forms instead. Include socials (and social posts when practical); a short founder bio that links to the portfolio.
-- Map creation should match that loop in studio: prompt AI with the user’s OpenRouter key or build from scratch, edit individual blocks, define parent-child (and grandchild) relationships as a node graph, then review, publish, and enter.
 - Share preview should be a full map (Figma-inspired): the travel order is the map itself; clicking a node is how someone decides to enter.
 
 ## Learned Workspace Facts
@@ -18,8 +17,30 @@
 - Turborepo + pnpm monorepo: `apps/web` (Next.js), `apps/mobile` (Expo scaffold), `apps/ai` (FastAPI); shared `packages/db` (Prisma), `packages/core`, `packages/ui-tokens`.
 - Auth is Better Auth (self-hostable). Data layer is Postgres + pgvector.
 - Git remotes use `dev` for integration, `staging` alongside it, and `main` for published releases.
-- Learning maps are knowledge-graph journeys with typed blocks (YouTube, blogs, AI text, PDF, flashcards, quizzes) and parent-child nested nodes. Regeneration is creator-only when enabled. Quizzes/flashcards tell the learner right or wrong only (radio + multi-select); they do not record scores.
-- Share and community views are a public full-map preview; clicking a node is how you enter. Traveling a map and saving progress requires an account (`/share/[slug]` vs `/maps/[slug]`).
-- New maps start from a topic via “Watch it build” (BYOK OpenRouter, encrypted at rest, unless mock generation is enabled) or from-scratch in studio: edit blocks, parent-child node graph, review, and publish.
+- Learning maps are knowledge-graph courses with typed blocks (reading/AI text, YouTube, video, audio, image, PDF/document, article/blog, resource, embed, code, quiz, flashcard) and parent-child nested nodes. Learners use the course player (`/maps/[slug]`); creators use the course studio (`/maps/[slug]/studio`), backed by the FastAPI course agent in `apps/ai`. Regeneration is creator-only when enabled. Quizzes/flashcards tell the learner right or wrong only (radio + multi-select); they do not record scores. Blocks store `durationSeconds` (real video length looked up from YouTube at write time) and an `optional` flag; lesson/module/course time counts core content, with optional deep dives shown separately ("+ X optional").
+- Share and community views are a public full-map preview; clicking a node is how you enter. Traveling a map and saving progress requires an account (`/share/[slug]` vs `/maps/[slug]`). The dashboard manages created and joined maps, public/private published maps with access requests the creator approves, an optional public learning path, and profile settings (profile, sign-in and security, devices, delete account).
+- The whole app supports light and dark themes via `<html data-theme>` (light/dark/system, persisted in the `eef-theme` cookie); the green night is the dark theme.
+- New maps start from a topic via “Watch it build” (BYOK OpenRouter, encrypted at rest, unless mock generation is enabled) or from-scratch in studio: edit blocks, parent-child node graph, review, and publish. `/maps/new` goes straight to the studio. Hand-authored courses are TypeScript course specs under `apps/web/scripts/courses/` loaded by `apps/web/scripts/load-course.ts`.
 - This repo also serves the Emmanuel Eze Foundation site. Partnership and volunteer inquiries are stored in the DB. Public contact is 216 T Street, Washington DC and admin@emmanuelezefoundation.org.
-- Distinct EEF vs EEF Learn marks with light/dark variants; EEF should be identifiable at a glance on the site and socials. Brand files live in `apps/web/public/brand` and the EZE CNS brand folder; Figma is the source for the Learn prototype and logos.
+- Distinct EEF vs EEF Learn marks with light/dark variants; EEF should be identifiable at a glance on the site and socials. Foundation pages should use the new gold EEF badge from this repo / Eze CNS, not the old colorful live-site wordmark. Brand files live in `apps/web/public/brand` and the EZE CNS brand folder; Figma is the source for the Learn prototype and logos.
+- Production is `https://learn.emmanuelezefoundation.org`: Next.js on Vercel (migrations in the build, `apps/web/vercel.json`), the FastAPI AI service and job worker on Google Cloud Run (`eef-ai`), Postgres on Neon, email via Resend SMTP, errors via Sentry. Runbook: `docs/deploy.md`; launch status: `docs/launch.md`. Heroku (`heroku.yml`) remains a single-container self-host option.
+- Proposed architecture (`docs/adr/0001-agent-server-grpc-mcp.md`, modeled on the Unseen Engine repo at `~/Documents/GitHub/unseen-engine`): a separate agent server (`apps/agents`, Python, LangGraph + Deep Agents, replacing `apps/ai`) talks to the Next.js application server only over gRPC; the application server owns all product data and serves MCP at `/api/mcp` (OAuth + personal API tokens, full creator scope including publish); hosting moves to Vercel + Google Cloud Run + Neon.
+- Never use the main dev database as Prisma's `--shadow-database-url`; use a separate `eef_shadow` database.
+- When `AI_PROVIDER=mock`, map generation must not send `mock-model` to OpenRouter. The OpenRouter key field must not use `type=password` (paste fails).
+
+<!-- eze:start (managed by eze-skills/scripts/init-project.sh; edit the template, not this block) -->
+## How we work here: the Unseen Engine playbook
+
+This repo follows the Unseen Engine playbook, whichever agent is working (Cursor, Claude Code or Codex).
+
+- **Skills.** Our skills are installed as `eze-*` (from the private `eze-skills` repo). Start with `/eze-ask` to find the right one and `/eze-playbook` for the rules of each stage. gstack skills (`/qa`, `/ship`, `/cso`, `/browse`) sit alongside them.
+- **Tests before code.** Every ticket's acceptance criteria become tests that a person approves before the build starts. Do not edit an approved test to make a build pass: stop and ask. Test files are guarded by `.github/CODEOWNERS`.
+- **Check locally before pushing.** `pnpm verify` (type check, lint, unit tests, build) runs before every push via `.githooks/pre-push`, and again on every pull request. `pnpm verify:full` adds the end-to-end tests.
+- **Compliant from day one.** The compliance profile is `docs/compliance.md` (create it with `/eze-compliance-profile` if it is missing). Every control in it has a ticket and a test.
+- **Never invent a fact.** Prices, reviews, counts, phone numbers, guarantees and claims come from the client. Unknowns stay visible as "To confirm" notes.
+- **Keys stay secret.** Never print, log, paste or commit a key. `.env` is gitignored.
+- **No agent pushes or deploys on its own.** Work reaches GitHub through a reviewed pull request (`/ship`, `/eze-pr`).
+- **Done means done.** See `/eze-playbook` → definition of done before calling a release finished.
+
+If the `eze-*` skills are not installed on this machine: `git clone git@github.com:realemmanueleze/eze-skills.git && eze-skills/scripts/setup.sh`.
+<!-- eze:end -->
