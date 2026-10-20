@@ -81,6 +81,15 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: env.AUTH_EMAIL_VERIFICATION === "on",
+    resetPasswordTokenExpiresIn: 60 * 60,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendEmail({
+        to: user.email,
+        subject: "Reset your EEF Learn password",
+        text: `Someone asked to reset the password on your EEF Learn account.\n\nIf that was you, choose a new one here (the link works for one hour):\n\n${url}\n\nIf it wasn't, ignore this email and your password stays as it is.`,
+      });
+    },
   },
   emailVerification: {
     sendOnSignUp: env.AUTH_EMAIL_VERIFICATION === "on",

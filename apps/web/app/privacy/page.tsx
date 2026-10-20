@@ -1,46 +1,79 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
-import { LearnLockup } from "../components/learn-lockup";
+import { LegalPage, ToConfirm } from "../components/legal-page";
+
+export const metadata: Metadata = { title: "Privacy policy · EEF Learn" };
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-night-950 px-8 py-6 text-star-100 lg:px-16">
-      <nav className="flex items-center justify-between">
-        <Link href="/learn" className="flex items-center">
-          <LearnLockup />
-        </Link>
-        <Link href="/learn" className="text-sm text-star-400 hover:text-star-100">
-          Back to Learn
-        </Link>
-      </nav>
-      <article className="mx-auto mt-12 max-w-2xl space-y-6 pb-24 leading-relaxed">
-        <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-aurora-400">Privacy</p>
-        <h1 className="text-4xl font-bold tracking-tight">How we handle your information</h1>
-        <p className="text-star-400">
-          EEF Learn is run by the Emmanuel Eze Foundation. We collect the least we need to run the
-          product, and we do not sell personal data.
-        </p>
-        <h2 className="pt-4 text-xl font-semibold">What we store</h2>
-        <ul className="list-disc space-y-2 pl-5 text-star-400">
-          <li>Account: name, email, password hash, and birthdate (used only for the 13+ age gate).</li>
-          <li>Learning: maps you create, progress on nodes, and companion chat messages.</li>
-          <li>Operational: session cookies, daily generation quotas, and job logs for map building.</li>
-        </ul>
-        <h2 className="pt-4 text-xl font-semibold">What we do not do</h2>
-        <ul className="list-disc space-y-2 pl-5 text-star-400">
-          <li>We do not sell or rent your data.</li>
-          <li>We do not use your learning maps to train third-party foundation models.</li>
-          <li>Published maps show your display name and the map itself. Private maps stay private.</li>
-        </ul>
-        <h2 className="pt-4 text-xl font-semibold">Contact</h2>
-        <p className="text-star-400">
-          Questions:{" "}
-          <a href="/contact" className="text-aurora-400 hover:underline">
-            Contact the foundation
-          </a>
-          .
-        </p>
-      </article>
-    </main>
+    <LegalPage title="How we handle your information" updated="20 October 2026">
+      <p>
+        EEF Learn is run by the Emmanuel Eze Foundation, a nonprofit at 216 T Street, Washington, DC. We collect the
+        least we need to run it, and we do not sell or rent personal data.
+      </p>
+
+      <h2>What we store</h2>
+      <ul>
+        <li>Your account: name, email, a hash of your password (never the password), and your birthdate, used only for the 13+ age rule. If you sign in with Google, we receive your name, email and picture from Google.</li>
+        <li>Your learning: the maps you create or join, your progress, your public learning path if you turn it on, access requests, and your chats with the tutor.</li>
+        <li>Your AI connections: a model key you add is encrypted before it is stored. Apps you connect (Claude, ChatGPT, Cursor, Gemini) are listed in Settings with the access you granted, and you can disconnect them there.</li>
+        <li>Foundation forms: what you send when you offer a partnership, volunteer to lead a series or host an event.</li>
+        <li>Running the service: sign-in sessions with their device and IP address, and error reports when something breaks.</li>
+      </ul>
+
+      <h2>Your model key and AI providers</h2>
+      <p>
+        EEF Learn has no AI of its own and sells no credits. When you use the tutor or the course agent, your request and
+        the course content it needs go to the provider you chose (OpenRouter, OpenAI, Anthropic or Google) using your
+        key, and that provider&apos;s terms and privacy policy apply to it. We send your key only to that provider, and
+        a key attached to a background job is sealed and removed when the job finishes.
+      </p>
+
+      <h2>Who else handles your data</h2>
+      <p>These companies run parts of EEF Learn for us and only process data to do that:</p>
+      <ul>
+        <li>Vercel (the website) and Google Cloud (the course agent and tutor service), in the United States.</li>
+        <li>Neon (the database), in the United States.</li>
+        <li>Resend (account emails such as verification and password reset).</li>
+        <li>Sentry (error reports, which can include your account ID and the page you were on).</li>
+        <li>YouTube shows lesson videos from its privacy-enhanced domain; Google applies its own policy when you play one.</li>
+      </ul>
+
+      <h2>Cookies</h2>
+      <p>
+        We use a sign-in cookie, a cookie that remembers your light or dark theme, and, only while you create an account
+        with Google, a ten-minute cookie holding your birthdate. We use no advertising or tracking cookies.
+      </p>
+
+      <h2>What you can see and others can&apos;t</h2>
+      <ul>
+        <li>A published public map shows its content and your display name. A private map is visible only to you and the people you approve.</li>
+        <li>Your learning path is private unless you make it public in Settings.</li>
+        <li>We do not use your maps or chats to train AI models.</li>
+      </ul>
+
+      <h2>Keeping and deleting</h2>
+      <p>
+        We keep your data while your account is open. Deleting your account in Settings removes your account, the maps
+        you made, your progress, chats, keys and connected apps. <ToConfirm>how long database backups keep deleted data</ToConfirm>
+      </p>
+      <p>
+        To get a copy of your data or ask a question about it, email{" "}
+        <a href="mailto:admin@emmanuelezefoundation.org">admin@emmanuelezefoundation.org</a>.
+      </p>
+
+      <h2>Learners aged 13 to 17</h2>
+      <p>
+        EEF Learn is for people 13 and older; we do not knowingly hold accounts for anyone younger and close any we find.{" "}
+        <ToConfirm>any extra protections or parental notice for learners under 18</ToConfirm>
+      </p>
+
+      <h2>Changes</h2>
+      <p>
+        If this policy changes in a way that matters, we&apos;ll tell you in the app before it takes effect. See also the{" "}
+        <Link href="/terms">Terms of use</Link> and the <Link href="/age-policy">age policy</Link>.
+      </p>
+    </LegalPage>
   );
 }

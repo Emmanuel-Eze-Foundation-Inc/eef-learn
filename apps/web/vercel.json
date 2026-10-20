@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "buildCommand": "cd ../.. && pnpm --filter @eef/db generate && DATABASE_URL=\"$DIRECT_DATABASE_URL\" pnpm --filter @eef/db exec prisma migrate deploy && pnpm --filter web build"
+}
