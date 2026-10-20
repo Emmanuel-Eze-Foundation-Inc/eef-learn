@@ -2,8 +2,8 @@ import Link from "next/link";
 
 import { LearnLockup } from "./learn-lockup";
 
-/** Flip to false once counsel has confirmed the terms and privacy policy (docs/launch.md). */
-export const LEGAL_DRAFT = true;
+/** The published policy. Open counsel points stay in docs/launch.md, not on the page. */
+export const LEGAL_DRAFT = false;
 
 export function LegalPage({
   title,
