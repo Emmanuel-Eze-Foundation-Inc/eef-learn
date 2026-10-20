@@ -1,6 +1,6 @@
 # Deploy and run EEF Learn
 
-The runbook for the hosted service at `https://learn.emmanuelezefoundation.org`: how it is laid out, how to set it up, deploy, roll back and restore, and who is told when it breaks. Self-hosting with Docker is separate: [self-hosting.md](self-hosting.md).
+The runbook for the hosted service at `https://www.emmanuelezefoundation.org`: how it is laid out, how to set it up, deploy, roll back and restore, and who is told when it breaks. Self-hosting with Docker is separate: [self-hosting.md](self-hosting.md).
 
 Agents prepare changes; a person runs the one-time setup and approves every production deploy (playbook rule 9).
 
@@ -16,7 +16,7 @@ Agents prepare changes; a person runs the one-time setup and approves every prod
 
 | Environment | Git branch | Web | Database branch |
 | --- | --- | --- | --- |
-| Production | `main` (merges from `dev` only) | `learn.emmanuelezefoundation.org` | `main` |
+| Production | `main` (merges from `dev` only) | `www.emmanuelezefoundation.org` | `main` |
 | Staging | `dev` | Vercel preview URL for `dev` | `staging` |
 | Pull request previews | any | Vercel preview URL | `staging` |
 
@@ -25,10 +25,19 @@ Agents prepare changes; a person runs the one-time setup and approves every prod
 1. **Neon.** Create the project in `aws-us-east-1`, then a `staging` branch. For each branch copy two URLs: the pooled one (host contains `-pooler`, add `?pgbouncer=true&connection_limit=1`) for the web app at runtime, and the direct one for migrations and the AI service (asyncpg does not work through the pooler). The first migration creates the `vector` extension.
 2. **Secrets.** Generate `AUTH_SECRET` and `AI_SERVICE_TOKEN` with `openssl rand -hex 32`, one pair per environment. Never reuse the dev values.
 3. **Cloud Run.** Create an Artifact Registry repository `eef` in `us-east4` and put each environment's `DATABASE_URL` (direct), `AI_SERVICE_TOKEN` and `SENTRY_DSN` in Secret Manager. Then deploy as below. Copy the service URL.
-4. **Resend.** Add `emmanuelezefoundation.org` (or a `mail.` subdomain), add its SPF, DKIM and DMARC records at the foundation's DNS, and create an API key with sending access only. `SMTP_URL=smtps://resend:<API key>@smtp.resend.com:465`, `EMAIL_FROM=EEF Learn <learn@emmanuelezefoundation.org>`.
-5. **Sentry.** Create `eef-learn-web` (Next.js) and `eef-learn-ai` (Python, FastAPI). Alert rules: every new issue, and any issue over 10 events in an hour, to the on-call person below. Add an uptime monitor on `https://learn.emmanuelezefoundation.org/api/health` every minute.
-6. **Vercel.** Import the GitHub repo with root directory `apps/web` (`apps/web/vercel.json` sets install and build), function region `iad1`. Set the variables below for Production and for Preview. Add the domain `learn.emmanuelezefoundation.org` (a `CNAME` to `cname.vercel-dns.com` at the foundation's DNS).
-7. **Google sign-in** (optional). Authorised redirect URI `https://learn.emmanuelezefoundation.org/api/auth/callback/google`.
+4. **Resend.** Done for the domain: `emmanuelezefoundation.org` is verified, with SPF, DKIM, and DMARC in DNS. Still required per environment: an API key with sending access only, then `SMTP_URL=smtps://resend:<API key>@smtp.resend.com:465` and `EMAIL_FROM=EEF Learn <learn@emmanuelezefoundation.org>`. The app does not read `RESEND_API_KEY`.
+5. **Sentry.** Create `eef-learn-web` (Next.js) and `eef-learn-ai` (Python, FastAPI). Alert rules: every new issue, and any issue over 10 events in an hour, to the on-call person below. Add an uptime monitor on `https://www.emmanuelezefoundation.org/api/health` every minute.
+6. **Vercel.** Import `Emmanuel-Eze-Foundation-Inc/eef-learn` with root directory `apps/web` (`apps/web/vercel.json` sets install and build), function region `iad1`. Set the production branch to `main`. GitHub's default branch is `dev`, and leaving that as production would ship staging. Set the variables below for Production and for Preview. Leave the custom domain off until the first deploy is healthy, then add `www.emmanuelezefoundation.org` and redirect the apex `emmanuelezefoundation.org` to it. Switch Production `AUTH_URL` to `https://www.emmanuelezefoundation.org`.
+7. **Google sign-in.** In Google Cloud → Google Auth Platform → Clients, create one **Web application** client named `EEF Learn`. Publish the app (Testing mode only allows listed test users). Scopes stay the defaults: openid, email, profile. Put the same client id and secret in `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` for local `.env`, Vercel Preview, and Vercel Production. Add every origin below; the redirect is always `{origin}/api/auth/callback/google`.
+
+   | Environment | Origin |
+   | --- | --- |
+   | Local | The origin in `AUTH_URL`. The running app is on `http://localhost:3000` and `http://localhost:3001`. `.env` currently says `http://localhost:3742`, and nothing is listening there, so Google sign-in will not return until `AUTH_URL` matches the port you open. |
+   | Staging | The stable `dev` preview, `https://<project>-git-dev-<team>.vercel.app`, once the Vercel project exists. |
+   | Production, before the custom domain | The project's `*.vercel.app` origin. Set `AUTH_URL` to that origin until DNS is live. |
+   | Production, after the domain | `https://www.emmanuelezefoundation.org` |
+
+   Add the new origin to this client when `AUTH_URL` changes. Sign-in always returns to `AUTH_URL`, not to whichever host the browser was on.
 8. **GitHub.** Protect `main` and `dev`: require the `pnpm verify` and `Secret scan` checks and one review, with code-owner review for tests.
 
 ## Environment variables
@@ -39,7 +48,7 @@ Web app (Vercel; Production and Preview get their own values):
 | --- | --- |
 | `DATABASE_URL` | Neon pooled URL |
 | `DIRECT_DATABASE_URL` | Neon direct URL (build-time migrations) |
-| `AUTH_URL` | `https://learn.emmanuelezefoundation.org` (Preview: the stable `dev` branch URL, `https://<project>-git-dev-<team>.vercel.app`; sign-in on other preview URLs needs them in `AUTH_TRUSTED_ORIGINS`) |
+| `AUTH_URL` | Production: the `*.vercel.app` origin until the domain is attached, then `https://www.emmanuelezefoundation.org`. Preview: the stable `dev` branch URL, `https://<project>-git-dev-<team>.vercel.app`. Sign-in on other preview URLs needs them in `AUTH_TRUSTED_ORIGINS`. |
 | `AUTH_SECRET`, `AI_SERVICE_TOKEN` | From step 2 |
 | `AI_SERVICE_URL` | Cloud Run service URL |
 | `AI_PROVIDER`, `AI_MODEL` | `openrouter`, `openai/gpt-4o-mini` (the default model for creators who pick none; never `mock` in production) |
@@ -47,7 +56,7 @@ Web app (Vercel; Production and Preview get their own values):
 | `SMTP_URL`, `EMAIL_FROM` | From step 4 |
 | `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_ENVIRONMENT` | `eef-learn-web` DSN; `production` or `staging` |
 | `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` | For source maps (the token is a secret) |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | The EEF Learn web client from step 7. Same pair on local, Preview, and Production. |
 | `YOUTUBE_API_KEY` | Real video lengths when blocks are saved |
 
 AI service (Cloud Run): `DATABASE_URL` (direct), `AI_SERVICE_TOKEN`, `AI_PROVIDER` and `AI_MODEL` (same as web), `YOUTUBE_API_KEY`, `SENTRY_DSN`, `SENTRY_ENVIRONMENT`.
@@ -69,7 +78,7 @@ gcloud run deploy eef-ai --image "$IMAGE" --region us-east4 \
 
 `--allow-unauthenticated` lets Vercel reach it; every route except `/health` still demands the `AI_SERVICE_TOKEN` bearer. More than one instance is safe: jobs are claimed with `FOR UPDATE SKIP LOCKED`.
 
-- **Check.** `https://learn.emmanuelezefoundation.org/api/health` returns `{"ok":true,"db":true,"ai":true}`; sign in; open a course; ask Owlbert a question with a key set.
+- **Check.** `https://www.emmanuelezefoundation.org/api/health` returns `{"ok":true,"db":true,"ai":true}`; sign in; open a course; ask Owlbert a question with a key set.
 
 ## Roll back
 

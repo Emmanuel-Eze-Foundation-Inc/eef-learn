@@ -2,51 +2,34 @@
 
 **Learn anything. See the whole map.**
 
-EEF Learn turns any topic into a living, navigable map of the best free knowledge. AI builds the constellation; YouTube videos, blogs, community maps, and your own PDFs fill it in — every source credited. Finish a map and a real person from the [Emmanuel Eze Foundation](https://emmanuelezefoundation.org) community meets you for a 30-minute coffee chat.
+Open-source learning maps from the [Emmanuel Eze Foundation](https://www.emmanuelezefoundation.org). This repo is the foundation site and EEF Learn: pick a topic, get a course you can walk, and publish it for anyone else to travel.
 
-> **Status: pre-alpha, building in the open.** The design and plan are complete and approved; the build is underway. Follow along or jump in.
-
-![EEF Learn — Learning Area](docs/design/prototype/07-learning-area.png)
+Live at [www.emmanuelezefoundation.org](https://www.emmanuelezefoundation.org). `emmanuelezefoundation.org` redirects there. EEF Learn is at [/learn](https://www.emmanuelezefoundation.org/learn).
 
 ## What it does
 
-- **Knowledge maps** — type a topic (or upload a PDF) and get a knowledge graph of everything you need to learn, ordered by prerequisites, rendered as a constellation you can travel in 3D (with a first-class 2D accessible view).
-- **Real-time content** — lessons generate as you arrive at each node: curated YouTube videos, linked articles, and AI explainers with named sources and full provenance.
-- **A learning companion** — a bot that knows your progress ("You mastered Determinants yesterday — this section leans on it") and answers questions about what you're learning.
-- **Community maps** — publish your map so others can learn from it; complex maps can build on existing ones, with credit and learner-controlled updates.
-- **Coffee chats** — finish a map and request a 30-minute conversation, matched by hand from EEF's community of alumni and volunteers. No algorithm decides who you meet. A person does.
+- **Learning maps.** A topic becomes a course: modules and lessons on a map you can move through in any direction. The lesson in front of you stays in focus. Nodes show the real content type, and finished work is visible on the map.
+- **Every content type.** Readings, YouTube, video, audio, images, documents, articles, resources, embeds, code, quizzes, and flashcards. Quizzes tell you right or wrong. They do not keep a score.
+- **Build it two ways.** Watch a course agent research the topic and fill the map, or build it yourself in the studio. Creators edit blocks, connect lessons, review, and publish.
+- **Community maps.** Search public maps, see their nodes, and enter one. A full map is the share preview. Traveling it and saving progress needs an account.
+- **Your own AI.** The foundation holds no model key and grants no credits. Creators connect OpenRouter, OpenAI, Anthropic, or Google, or use their own assistant over MCP. The tutor, Owlbert, uses that key.
+- **The foundation site.** The homepage is the Emmanuel Eze Foundation: the path from food and classrooms through bootcamps to a place anyone can learn. Partnership and volunteer forms live there. [Unseen Engine](https://myunseenengine.com) is the sponsor.
 
-## Our position
-
-We will never compete with frontier labs on generation quality. We compete on the **community graph**, **attribution lineage**, and **EEF's human network**. Every piece of content credits its sources. Every map credits the maps it builds on. Every completed journey ends with a human being.
+Sign-in is email or Google. You must be 13 or older. Preview is free. Entering a map needs an account.
 
 ## Stack
 
-| Layer | Choice |
+| Part | Where it runs |
 |---|---|
-| Monorepo | Turborepo + pnpm |
-| Web | Next.js (App Router), Tailwind, shadcn/ui, react-three-fiber |
-| Mobile (v1.5) | Expo / React Native, NativeWind |
-| Auth | Better Auth |
-| AI service | Python FastAPI (generation pipelines, RAG, knowledge graph) |
-| Database | Postgres + pgvector (Neon hosted / docker-compose local) |
-| AI providers | Mock by default; OpenRouter with per-task model routing for hosted |
-| Streaming chat | Vercel AI SDK |
+| Web (`apps/web`) | Next.js on Vercel |
+| Course agent and tutor (`apps/ai`) | FastAPI on Google Cloud Run |
+| Database | Postgres and pgvector on Neon |
+| Auth | Better Auth, including Google |
+| Email | Resend over SMTP |
+| Monorepo | Turborepo and pnpm |
 
-Self-hostable with one command (`docker-compose up`), or run on the hosted stack (Vercel + Neon + Railway).
-
-## Documents
-
-- [`PLAN.md`](PLAN.md) — the reviewed implementation plan (milestones M0–M5)
-- [`docs/designs/eef-learn-platform.md`](docs/designs/eef-learn-platform.md) — the approved platform design
-- [`docs/design/BRAND.md`](docs/design/BRAND.md) — the Aurora brand system (dual-theme palette, map language, motion grammar)
-- [`PRODUCT.md`](PRODUCT.md) — durable product truth
-- [`TODOS.md`](TODOS.md) — scope deferred to v1.5 / v2
-
-## About the Emmanuel Eze Foundation
-
-EEF's mission: anyone can learn anything, and nobody should do it alone. We pair free, open-source learning tools with a human community — coffee chats, mentorship, and physical and virtual events.
+Self-hosting with Docker is in [docs/self-hosting.md](docs/self-hosting.md). The hosted layout is in [docs/deploy.md](docs/deploy.md).
 
 ## License
 
-[MIT](LICENSE) — free to use, self-host, fork, and build on.
+[MIT](LICENSE). Free to use, self-host, fork, and build on.
