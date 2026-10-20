@@ -1,13 +1,18 @@
-import { isMapBrief, slugifyTopic, titleFromTopic, type MapBrief } from "@eef/core";
+import {
+  isMapBrief,
+  slugifyTopic,
+  titleFromTopic,
+  type MapBrief,
+} from "@eef/core";
 import { prisma } from "@eef/db";
 import { createId } from "@paralleldrive/cuid2";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { env } from "@/lib/env";
-import { consumeQuota } from "@/lib/quota";
 import { getSession } from "@/lib/session";
-import { getUserApiKey } from "@/lib/user-ai-key";
+import { modelRequired } from "@/lib/model-required";
+import { getUserModel, sealForJob } from "@/lib/user-ai-key";
 
 const briefSchema = z
   .object({
@@ -18,13 +23,17 @@ const briefSchema = z
   })
   .optional();
 
-const createMapSchema = z.object({
-  topic: z.string().trim().min(2).max(200),
-  mode: z.enum(["generate", "blank"]).default("generate"),
-  brief: briefSchema,
-});
+const UNTITLED = "Untitled course";
 
-/** POST /api/maps — create a Map shell; generate enqueues skeleton, blank opens studio. */
+const createMapSchema = z
+  .object({
+    topic: z.string().trim().max(200).optional(),
+    mode: z.enum(["generate", "blank"]).default("generate"),
+    brief: briefSchema,
+  })
+  .refine((d) => d.mode === "blank" || (d.topic?.length ?? 0) >= 2);
+
+/** POST /api/maps — create a Map shell; generate enqueues skeleton, blank is an empty course for the studio. */
 export async function POST(req: Request) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -33,29 +42,14 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: "topic must be 2-200 characters" }, { status: 422 });
   }
-  const { topic, mode } = parsed.data;
+  const { mode } = parsed.data;
+  const topic = parsed.data.topic && parsed.data.topic.length >= 2 ? parsed.data.topic : UNTITLED;
   const brief: MapBrief | undefined = parsed.data.brief && isMapBrief(parsed.data.brief)
     ? parsed.data.brief
     : undefined;
 
-  const userApiKey = await getUserApiKey(session.user.id);
-  if (mode === "generate" && !userApiKey && env.AI_PROVIDER !== "mock") {
-    return NextResponse.json(
-      {
-        error: "openrouter_key_required",
-        message: "Add your OpenRouter key to build a map. We store it encrypted and use it only for your generations.",
-      },
-      { status: 409 },
-    );
-  }
-
-  const ok = await consumeQuota(session.user.id, "maps_per_day");
-  if (!ok) {
-    return NextResponse.json(
-      { error: "You've reached today's new-map limit. It resets at midnight UTC." },
-      { status: 429 },
-    );
-  }
+  const userModel = mode === "generate" ? await getUserModel(session.user.id) : null;
+  if (mode === "generate" && !userModel && env.AI_PROVIDER !== "mock") return modelRequired("build a map");
 
   try {
     const map = await prisma.map.create({
@@ -78,7 +72,7 @@ export async function POST(req: Request) {
         kind: "skeleton",
         userId: session.user.id,
         mapId: map.id,
-        payload: { topic, brief: brief ?? {}, mapId: map.id, userApiKey },
+        payload: { topic, brief: brief ?? {}, mapId: map.id, userModel: userModel ? sealForJob(userModel) : null },
       },
     });
 

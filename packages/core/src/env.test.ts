@@ -20,10 +20,8 @@ describe("loadWebEnv", () => {
     expect(() => loadWebEnv(rest as NodeJS.ProcessEnv)).toThrowError(/DATABASE_URL/);
   });
 
-  it("requires AI_API_KEY for non-mock providers", () => {
-    expect(() =>
-      loadWebEnv({ ...base, AI_PROVIDER: "openrouter" } as NodeJS.ProcessEnv),
-    ).toThrowError(/AI_API_KEY/);
+  it("needs no platform model key for real providers", () => {
+    expect(loadWebEnv({ ...base, AI_PROVIDER: "openrouter" } as NodeJS.ProcessEnv).AI_PROVIDER).toBe("openrouter");
   });
 });
 

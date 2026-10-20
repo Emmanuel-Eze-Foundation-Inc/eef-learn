@@ -1,8 +1,8 @@
 """Section pipeline (ticket T6): node → ai_text ContentBlock with provenance.
 
 Contract with web (T10):
-- payload: {"mapId", "nodeId", "topic", "nodeTitle", "nodeSlug", "mapVersion"}
-- consumes 1 unit of sections_per_day (atomic; quota failure is permanent, no retry)
+- payload: {"mapId", "nodeId", "topic", "nodeTitle", "nodeSlug", "mapVersion", "userModel"}
+- runs on the creator's own model, with no usage limits; without one it fails permanently
 - idempotent: the (nodeId, blockIndex, mapVersion) unique key + ON CONFLICT
   makes a retried job converge on the same block
 - checkpoints: section_requested → text_generated → block_created → done
@@ -12,7 +12,7 @@ import uuid
 from typing import Any
 
 from eef_ai.providers.base import get_provider
-from eef_ai.quota import QuotaExceeded, consume
+from eef_ai.providers.chat import NoUserModel, job_user_model
 from eef_ai.settings import load_settings
 from eef_ai.worker import JobContext, PermanentJobError, register_handler
 
@@ -20,15 +20,12 @@ from eef_ai.worker import JobContext, PermanentJobError, register_handler
 async def handle_section(ctx: JobContext) -> dict[str, Any]:
     settings = load_settings()
     p = ctx.payload
-    provider = get_provider(settings, p.get("userApiKey"))
+    try:
+        provider = get_provider(settings, job_user_model(p.get("userModel"), settings))
+    except NoUserModel as exc:
+        raise PermanentJobError(str(exc)) from None
     node_id: str = p["nodeId"]
     map_version: int = p.get("mapVersion", 1)
-    user_id: str = ctx.job["userId"]
-
-    try:
-        await consume(ctx.pool, user_id, "sections_per_day")
-    except QuotaExceeded as e:
-        raise PermanentJobError(str(e)) from None
 
     await ctx.checkpoint("section_requested", node_id=node_id)
 

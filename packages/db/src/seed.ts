@@ -40,10 +40,12 @@ async function main() {
 
   const nodes: Record<string, string> = {};
   for (const spec of nodeSpecs) {
+    const positionX = 120 + spec.order * 280;
+    const positionY = 80;
     const node = await prisma.node.upsert({
       where: { mapId_slug: { mapId: map.id, slug: spec.slug } },
-      update: {},
-      create: { ...spec, mapId: map.id },
+      update: { positionX, positionY },
+      create: { ...spec, mapId: map.id, positionX, positionY },
     });
     nodes[spec.slug] = node.id;
   }

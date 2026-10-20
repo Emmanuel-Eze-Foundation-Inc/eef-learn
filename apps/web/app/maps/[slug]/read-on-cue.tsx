@@ -8,7 +8,7 @@ function TrailMark({ className }: { className?: string }) {
       aria-hidden="true"
       className={className}
     >
-      <circle cx="11" cy="4.5" r="3" fill="#0d1f18" stroke="currentColor" strokeWidth="1.7" />
+      <circle cx="11" cy="4.5" r="3" fill="var(--night-900)" stroke="currentColor" strokeWidth="1.7" />
       <path
         d="M11 8.5 V24"
         stroke="currentColor"
@@ -42,8 +42,8 @@ export function ReadOnChrome({
       }`}
       style={{
         background: bottom
-          ? "linear-gradient(to top, #0d1f18 0%, #0d1f18 58%, rgba(13,31,24,0) 100%)"
-          : "linear-gradient(to bottom, #0d1f18 0%, #0d1f18 58%, rgba(13,31,24,0) 100%)",
+          ? "linear-gradient(to top, var(--night-900) 0%, var(--night-900) 58%, transparent 100%)"
+          : "linear-gradient(to bottom, var(--night-900) 0%, var(--night-900) 58%, transparent 100%)",
       }}
     >
       {children}
@@ -71,7 +71,7 @@ export function ReadOnCue({
           aria-hidden="true"
           className="pointer-events-none absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{
-            background: "radial-gradient(circle, rgba(52,217,140,0.22) 0%, rgba(52,217,140,0) 70%)",
+            background: "radial-gradient(circle, color-mix(in oklab, var(--aurora-400) 22%, transparent) 0%, transparent 70%)",
           }}
         />
         {!down && <span className="rotate-180">{mark}</span>}
@@ -89,7 +89,7 @@ export function ReadOnCue({
         aria-hidden="true"
         className="pointer-events-none absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full"
         style={{
-          background: "radial-gradient(circle, rgba(52,217,140,0.22) 0%, rgba(52,217,140,0) 70%)",
+          background: "radial-gradient(circle, color-mix(in oklab, var(--aurora-400) 22%, transparent) 0%, transparent 70%)",
         }}
       />
       {!down && <span className="rotate-180">{mark}</span>}

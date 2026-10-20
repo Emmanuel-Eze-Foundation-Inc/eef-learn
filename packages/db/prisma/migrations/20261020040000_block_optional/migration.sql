@@ -1,0 +1,1 @@
+ALTER TABLE "ContentBlock" ADD COLUMN "optional" BOOLEAN NOT NULL DEFAULT false;

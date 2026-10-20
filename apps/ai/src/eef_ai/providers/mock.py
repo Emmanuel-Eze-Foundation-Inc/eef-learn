@@ -42,13 +42,50 @@ def generate_map_skeleton(topic: str, brief: dict[str, Any] | None = None) -> di
     return {"topic": topic, "brief": brief or {}, "seed": _seed(topic), "nodes": nodes, "edges": edges}
 
 
+def generate_module_beats(node_slug: str, node_title: str) -> list[dict[str, Any]]:
+    """Watch + idea + check so mock maps still mix beat types."""
+    quiz = {
+        "mode": "radio",
+        "prompt": f"This lesson is about {node_title}. What should you do next?",
+            "options": [
+                {"id": "a", "label": "Skip the idea and only watch"},
+                {"id": "b", "label": "Learn the idea, then check you have it"},
+                {"id": "c", "label": "Memorize a score"},
+            ],
+        "correct": ["b"],
+    }
+    return [
+        {
+            "type": "youtube",
+            "title": f"Watch: {node_title}",
+            "url": "https://www.youtube.com/watch?v=eMlx5fFNoYc",
+            "body": "A visual explainer to sit with this beat.",
+            "sourceName": "3Blue1Brown",
+        },
+        {
+            "type": "ai_text",
+            "title": f"The idea: {node_title}",
+            "body": (
+                f"This is mock teaching text for `{node_slug}` ({node_title}). "
+                "A live OpenRouter key runs the course-create skill: research, modules, "
+                "then per-lesson video, reading, and a check."
+            ),
+        },
+        {
+            "type": "quiz",
+            "title": "Check",
+            "body": json.dumps(quiz),
+        },
+    ]
+
+
 def generate_section_text(node_slug: str) -> dict[str, Any]:
     return {
         "type": "ai_text",
         "title": f"About {node_slug.replace('-', ' ')}",
         "body": (
             f"This is deterministic mock content for `{node_slug}`. "
-            "Set AI_PROVIDER=openrouter (plus AI_API_KEY) for real generation."
+            "Connect your own AI (a model key in Settings, or MCP) for real generation."
         ),
         "provenance": {
             "model": "mock-model",

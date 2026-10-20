@@ -8,7 +8,8 @@ import asyncpg
 import pytest
 
 from eef_ai.graph import validate_skeleton
-from eef_ai.pipelines.skeleton import handle_skeleton
+from eef_ai.pipelines.skeleton import _layout_positions, handle_skeleton
+from eef_ai.providers import mock
 from eef_ai.worker import claim_job, run_job
 
 TEST_DB = os.environ.get("TEST_DATABASE_URL")
@@ -66,6 +67,28 @@ def test_accepts_nested_parent():
     assert validate_skeleton(s) == []
 
 
+def test_layout_positions_nests_children_below():
+    pos = _layout_positions(
+        [
+            {"slug": "a", "title": "A", "order": 0},
+            {"slug": "b", "title": "B", "order": 0, "parent": "a"},
+            {"slug": "c", "title": "C", "order": 1},
+        ]
+    )
+    assert pos["b"][1] > pos["a"][1]
+    assert pos["c"][0] > pos["a"][0]
+
+
+def test_layout_positions_never_overlap_siblings():
+    nodes = mock.generate_map_skeleton("SQL")["nodes"]
+    pos = _layout_positions(nodes)
+    points = list(pos.values())
+    assert len(points) == len(nodes)
+    for i, (ax, ay) in enumerate(points):
+        for bx, by in points[i + 1 :]:
+            assert abs(ax - bx) >= 280 or abs(ay - by) >= 100
+
+
 def test_rejects_unknown_parent():
     s = valid_skeleton()
     s["nodes"][1]["parent"] = "ghost"
@@ -114,7 +137,9 @@ async def test_skeleton_job_end_to_end(monkeypatch):
         row = await pool.fetchrow('SELECT * FROM "GenerationJob" WHERE id = $1', jid)
         assert row["status"] == "succeeded", row["error"]
         steps = [c["step"] for c in json.loads(row["checkpoints"])]
-        assert steps == ["skeleton_requested", "skeleton_generated", "nodes_created", "done"]
+        assert steps[0:3] == ["skeleton_requested", "skeleton_generated", "nodes_created"]
+        assert "beats_created" in steps
+        assert steps[-1] == "done"
 
         nodes = await pool.fetch('SELECT * FROM "Node" WHERE "mapId" = $1 ORDER BY "order"', map_id)
         edges = await pool.fetch('SELECT * FROM "Edge" WHERE "mapId" = $1', map_id)

@@ -20,10 +20,10 @@ Source design: [`docs/designs/eef-learn-platform.md`](designs/eef-learn-platform
 
 - **Postgres is the coordination point.** The web app enqueues `GenerationJob` rows; the AI service claims them with `SELECT ... FOR UPDATE SKIP LOCKED`, heartbeats a lease, and writes append-only **checkpoints**.
 - **Checkpoint polling is the primary realtime transport.** Clients poll a checkpoint endpoint with last-seen-id resume tokens. This survives serverless timeouts and Neon connection pooling. `LISTEN/NOTIFY` is a self-host-only optimization (signal-only; checkpoints re-read on reconnect).
-- **One AI env contract for both services.** `AI_PROVIDER` / `AI_MODEL` / `AI_API_KEY` / `AI_BASE_URL` + per-task overrides (`AI_MODEL_SKELETON|SECTION|CHAT|ENRICH`). Mock is the default; OpenRouter is the hosted default.
+- **The creator's model, never the platform's.** EEF Learn provides no AI credits. Each AI call runs on the user's own key (OpenRouter, OpenAI, Anthropic or Google, chosen in Settings and passed per request as `userModel`), or happens in the user's own AI client over MCP. `AI_PROVIDER=mock` gives keyless users deterministic output; `AI_MODEL_*` set OpenRouter per-task defaults.
 - **Retrieval lives in one place.** The AI service `/retrieve` endpoint owns query embedding + hybrid search (pgvector + FTS, RRF). The TypeScript side never embeds. Every retrieval query is visibility-scoped.
 - **Map versioning.** Regeneration bumps `Map.version`; node slugs are stable across regenerations; stale-version progress writes are rejected with a typed error (client shows a reload banner).
-- **Quotas & spend** are enforced with atomic conditional decrements; spend is reserved at enqueue and reconciled at completion; failed generations refund quota.
+- **No usage limits.** The creator's key pays, so there are no quotas.
 
 ## Package map
 

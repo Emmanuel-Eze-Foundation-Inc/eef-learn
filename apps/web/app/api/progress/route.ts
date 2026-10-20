@@ -2,6 +2,7 @@ import { prisma } from "@eef/db";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { canTravel } from "@/lib/map-access";
 import { getSession } from "@/lib/session";
 
 const progressSchema = z.object({
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
 
   const node = await prisma.node.findUnique({ where: { id: nodeId }, include: { map: true } });
   if (!node) return NextResponse.json({ error: "not found" }, { status: 404 });
-  if (node.map.visibility !== "public" && node.map.creatorId !== session.user.id) {
+  if (!(await canTravel(node.map, session.user.id))) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 
