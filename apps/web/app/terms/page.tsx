@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { LegalPage, ToConfirm } from "../components/legal-page";
+import { LegalPage } from "../components/legal-page";
 
 export const metadata: Metadata = { title: "Terms of use · EEF Learn" };
 
@@ -44,9 +44,9 @@ export default function TermsPage() {
 
       <h2>The service</h2>
       <p>
-        EEF Learn is provided as it is, without guarantees that it will always be available or free of errors. To the
-        extent the law allows, the foundation is not liable for losses from using it. The code is open source under its
-        own licence. <ToConfirm>limitation of liability wording and governing law</ToConfirm>
+        These terms are governed by the laws of the United States. EEF Learn is provided as it is, without a guarantee
+        that it will always be available or free of errors. To the extent United States law allows, the foundation is
+        not liable for losses from using it. The code is open source under its own licence.
       </p>
 
       <h2>Changes and contact</h2>

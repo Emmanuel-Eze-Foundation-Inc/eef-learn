@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { LegalPage, ToConfirm } from "../components/legal-page";
+import { LegalPage } from "../components/legal-page";
 
 export const metadata: Metadata = { title: "Privacy policy · EEF Learn" };
 
@@ -56,7 +56,8 @@ export default function PrivacyPage() {
       <h2>Keeping and deleting</h2>
       <p>
         We keep your data while your account is open. Deleting your account in Settings removes your account, the maps
-        you made, your progress, chats, keys and connected apps. <ToConfirm>how long database backups keep deleted data</ToConfirm>
+        you made, your progress, chats, keys and connected apps from the live service. Deleted data is kept in our
+        backups and is stored forever.
       </p>
       <p>
         To get a copy of your data or ask a question about it, email{" "}
@@ -65,8 +66,8 @@ export default function PrivacyPage() {
 
       <h2>Learners aged 13 to 17</h2>
       <p>
-        EEF Learn is for people 13 and older; we do not knowingly hold accounts for anyone younger and close any we find.{" "}
-        <ToConfirm>any extra protections or parental notice for learners under 18</ToConfirm>
+        EEF Learn is for people 13 and older. We do not knowingly hold accounts for anyone younger, and we close any we
+        find. We do not send a separate notice for learners aged 13 to 17.
       </p>
 
       <h2>Changes</h2>

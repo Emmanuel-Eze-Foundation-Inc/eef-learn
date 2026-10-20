@@ -522,6 +522,12 @@ export function FoundationHome({ maps, posts }: { maps: PublicMap[]; posts: Foun
             <Link className="hover:text-star-100" href="/contact">
               Contact
             </Link>
+            <Link className="hover:text-star-100" href="/privacy">
+              Privacy
+            </Link>
+            <Link className="hover:text-star-100" href="/terms">
+              Terms
+            </Link>
             <a className="hover:text-star-100" href="https://github.com/Emmanuel-Eze-Foundation-Inc/eef-learn">
               GitHub
             </a>

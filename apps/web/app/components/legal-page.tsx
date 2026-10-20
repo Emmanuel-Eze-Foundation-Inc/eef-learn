@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { LearnLockup } from "./learn-lockup";
 
-/** The published policy. Open counsel points stay in docs/launch.md, not on the page. */
+/** The published policy. A true value brings the draft banner back. */
 export const LEGAL_DRAFT = false;
 
 export function LegalPage({
@@ -35,12 +35,5 @@ export function LegalPage({
         {children}
       </article>
     </main>
-  );
-}
-
-export function ToConfirm({ children }: { children: React.ReactNode }) {
-  if (!LEGAL_DRAFT) return null;
-  return (
-    <span className="rounded bg-gold-400/15 px-1.5 py-0.5 font-mono text-xs text-gold-400">To confirm: {children}</span>
   );
 }

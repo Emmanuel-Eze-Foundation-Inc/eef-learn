@@ -37,7 +37,7 @@ The playbook's definition of done (`/eze-playbook` → definition of done), appl
 - [ ] **Alerts reach a named person** (Sentry issue alerts and the uptime monitor).
 - [ ] **One tested restore** from Neon, recorded in `deploy.md`.
 - [ ] **Compliance profile** (`docs/compliance.md`, `/eze-compliance-profile`). Learners are 13+, so COPPA's under-13 rules do not apply, but teen accounts and US state privacy laws still need a decision.
-- [ ] **Counsel still owes three points** that are no longer shown on the published pages: how long database backups keep deleted data, any extra notice for learners under 18, and the limitation-of-liability wording plus governing law.
+- [x] **Counsel points, decided by the foundation:** deleted data is kept in backups forever; no separate notice for learners aged 13 to 17; the terms are governed by United States law, with liability limited to the extent that law allows.
 - [ ] **Branch protection** on `main` and `dev`: `pnpm verify` and `Secret scan` required, one review, code owners for tests.
 - [ ] **Uncommitted work landed** on `dev` through reviewed pull requests and checked on staging.
 
