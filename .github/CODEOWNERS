@@ -1,0 +1,9 @@
+# Approved tests may only change with a code owner's approval (Unseen Engine playbook: tests before code).
+/tests/                 @realemmanueleze
+**/*.test.*             @realemmanueleze
+**/*.spec.*             @realemmanueleze
+**/__tests__/           @realemmanueleze
+/e2e/                   @realemmanueleze
+/playwright.config.*    @realemmanueleze
+/vitest.config.*        @realemmanueleze
+/docs/compliance.md     @realemmanueleze

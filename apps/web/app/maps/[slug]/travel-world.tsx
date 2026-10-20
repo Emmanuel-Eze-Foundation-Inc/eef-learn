@@ -475,6 +475,7 @@ export function TravelWorld({
 
   useEffect(() => {
     if (!showComplete) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- resets the celebration when the learner leaves the end
       setCelebrateBlend(0);
       return;
     }

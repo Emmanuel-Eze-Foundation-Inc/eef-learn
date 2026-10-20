@@ -25,12 +25,14 @@ def test_mock_skeleton_requires_token():
 
 
 def test_mock_skeleton_deterministic():
-    headers = {"Authorization": "Bearer test-token"}
+    headers = {"Authorization": f"Bearer {os.environ['AI_SERVICE_TOKEN']}"}
     a = client.post("/dev/mock-skeleton", json={"topic": "Linear Algebra"}, headers=headers)
     b = client.post("/dev/mock-skeleton", json={"topic": "Linear Algebra"}, headers=headers)
     assert a.status_code == 200
     assert a.json() == b.json()
-    assert len(a.json()["nodes"]) == 4
+    nodes = a.json()["nodes"]
+    assert len(nodes) == 6
+    assert sum(1 for n in nodes if n.get("parent")) == 2
 
 
 def test_mock_embeddings_shape():
