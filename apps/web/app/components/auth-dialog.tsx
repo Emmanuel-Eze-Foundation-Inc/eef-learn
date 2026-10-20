@@ -9,6 +9,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { authClient } from "@/lib/auth-client";
@@ -122,7 +123,7 @@ export function AuthPanel({
     setError(null);
     setPending(true);
     const form = new FormData(e.currentTarget);
-    const { error: err } = await authClient.signIn.email({
+    const { data, error: err } = await authClient.signIn.email({
       email: String(form.get("email")),
       password: String(form.get("password")),
     });
@@ -131,6 +132,8 @@ export function AuthPanel({
       setError(err.message ?? "Sign in failed. Check your email and password.");
       return;
     }
+    // Signing in to approve an AI client: Better Auth redirects to the consent step itself.
+    if (data && "redirect" in data && data.redirect) return;
     await finish();
   }
 
@@ -221,6 +224,15 @@ export function AuthPanel({
           <Field label="Password">
             <TextInput name="password" type="password" required autoComplete="current-password" />
           </Field>
+          <div className="-mt-1 text-right">
+            <Link
+              href="/forgot-password"
+              onClick={onSuccess}
+              className="text-sm text-star-400 underline-offset-2 hover:text-star-100 hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <SubmitButton pending={pending}>Sign in</SubmitButton>
         </form>
       ) : (
@@ -242,6 +254,17 @@ export function AuthPanel({
             We store your birthdate only to enforce the 13+ age policy.
           </p>
           <SubmitButton pending={pending}>Create account</SubmitButton>
+          <p className="text-center text-xs leading-relaxed text-star-400">
+            By creating an account you agree to the{" "}
+            <Link href="/terms" className="text-star-100 underline underline-offset-2">
+              Terms of use
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="text-star-100 underline underline-offset-2">
+              Privacy policy
+            </Link>
+            .
+          </p>
         </form>
       )}
     </div>
@@ -286,14 +309,14 @@ export function AuthDialogProvider({
           <button
             type="button"
             aria-label="Close sign in"
-            className="absolute inset-0 bg-night-950/80"
+            className="absolute inset-0 bg-night-950/80 motion-safe:animate-[scrim-enter_250ms_var(--ease-out)_both]"
             onClick={close}
           />
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            className="relative z-10 w-full max-w-md max-h-[min(90dvh,44rem)] overflow-y-auto rounded-[1.75rem] border border-night-800 bg-night-900 p-6 shadow-[0_24px_80px_rgba(6,16,12,0.65)] sm:p-8"
+            className="relative z-10 w-full max-w-md max-h-[min(90dvh,44rem)] overflow-y-auto rounded-[1.75rem] border border-night-800 bg-night-900 p-6 shadow-[0_24px_80px_var(--shadow-strong)] motion-safe:animate-[dialog-enter_250ms_var(--ease-out)_both] sm:p-8"
           >
             <p id={titleId} className="sr-only">
               Sign in or create an account
