@@ -84,7 +84,7 @@ function PartnershipForm() {
 
   return (
     <form onSubmit={onSubmit} className="mt-8 grid w-full gap-5" noValidate>
-      <p className="text-[#3e4a43]">
+      <p className="text-star-300">
         Schools, companies, cities, and labs that want to host maps, series, or space.
       </p>
       <Honeypot />
@@ -161,7 +161,7 @@ function VolunteerForm() {
 
   return (
     <form onSubmit={onSubmit} className="mt-8 grid w-full gap-5" noValidate>
-      <p className="text-[#3e4a43]">
+      <p className="text-star-300">
         Lead a training series or host a community event, in person or online.
       </p>
       <Honeypot />

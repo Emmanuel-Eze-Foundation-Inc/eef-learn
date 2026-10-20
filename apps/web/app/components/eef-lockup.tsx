@@ -11,7 +11,7 @@ export function EefLockup({
   if (variant === "short") {
     return (
       <span className={`flex items-center gap-3 ${className ?? ""}`}>
-        <EefBadge className="h-9 w-9 shrink-0" />
+        <EefBadge shape="circle" className="h-9 w-9 shrink-0" />
         <span className="text-[22px] font-semibold leading-none tracking-tight">EEF</span>
       </span>
     );
