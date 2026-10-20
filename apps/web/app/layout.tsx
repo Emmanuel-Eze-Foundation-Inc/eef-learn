@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 
 import { googleAuthEnabled } from "@/lib/auth";
+import { env } from "@/lib/env";
+import { THEME_BOOT_SCRIPT } from "@/lib/theme";
+
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { AuthDialogProvider } from "./components/auth-dialog";
 import "./globals.css";
@@ -17,6 +23,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(env.AUTH_URL),
   title: "EEF Learn",
   description:
     "Learn anything. See the whole map. Community-led learning maps by the Emmanuel Eze Foundation.",
@@ -43,10 +50,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
+      data-theme="system"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <Script id="theme-boot" strategy="beforeInteractive">
+          {THEME_BOOT_SCRIPT}
+        </Script>
+      </head>
       <body className="min-h-full flex flex-col">
-        <AuthDialogProvider googleEnabled={googleAuthEnabled}>{children}</AuthDialogProvider>
+        <TooltipProvider>
+          <AuthDialogProvider googleEnabled={googleAuthEnabled}>{children}</AuthDialogProvider>
+        </TooltipProvider>
+        <Toaster position="bottom-right" />
       </body>
     </html>
   );

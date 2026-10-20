@@ -1,24 +1,89 @@
 @import "tailwindcss";
 
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where([data-theme="system"], [data-theme="system"] *) {
+      @slot;
+    }
+  }
+}
+
 /*
  * Aurora design tokens — source of truth: docs/design/BRAND.md §3 (v2.0)
- * and packages/ui-tokens. Dark is default; light mode via [data-theme="light"].
+ * and packages/ui-tokens. <html data-theme> is "light", "dark", or "system" (follows the OS).
  * Roles: gold = earned (never a button) · aurora = offered (never a reward).
  */
 :root {
-  --night-950: #06100c;
-  --night-900: #0b1a13;
-  --night-800: #16281f;
-  --star-100: #edf5ee;
-  --star-400: #8fa89a;
+  --night-950: #07120d;
+  --night-900: #0d1c15;
+  --night-850: #13261d;
+  --night-800: #1e3328;
+  --edge: #3d5c4c;
+  --star-100: #eef5ef;
+  --star-300: #c3d3c8;
+  --star-400: #96ad9f;
   --aurora-400: #34d98c;
   --aurora-600: #0e7a55;
   --gold-400: #f2c14e;
   --ink-900: #0f1d17;
   --ember-300: #fda4af;
   --ember-500: #e11d48;
+  --eef-ring: #34d98c;
+  --shadow-soft: rgba(0, 0, 0, 0.35);
+  --shadow-strong: rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --background: var(--night-950);
+  --foreground: var(--star-100);
+  --card: var(--night-900);
+  --card-foreground: var(--star-100);
+  --popover: var(--night-900);
+  --popover-foreground: var(--star-100);
+  --primary: var(--aurora-400);
+  --primary-foreground: var(--ink-900);
+  --secondary: var(--night-800);
+  --secondary-foreground: var(--star-100);
+  --muted: var(--night-800);
+  --muted-foreground: var(--star-400);
+  --accent: var(--night-800);
+  --accent-foreground: var(--star-100);
+  --destructive: var(--ember-500);
+  --border: var(--night-800);
+  --input: var(--night-800);
+  --ring: var(--aurora-400);
+  --radius: 0.95rem;
+  --sidebar: var(--night-900);
+  --sidebar-foreground: var(--star-100);
+  --sidebar-primary: var(--aurora-400);
+  --sidebar-primary-foreground: var(--ink-900);
+  --sidebar-accent: var(--night-800);
+  --sidebar-accent-foreground: var(--star-100);
+  --sidebar-border: var(--night-800);
+  --sidebar-ring: var(--aurora-400);
+}
+
+@keyframes dialog-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scrim-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes arrive {
@@ -161,6 +226,16 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  @keyframes dialog-enter {
+    from {
+      opacity: 0;
+      transform: none;
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
   @keyframes arrive {
     from {
       opacity: 0;
@@ -251,32 +326,71 @@
   }
 }
 
-[data-theme="light"] {
-  --night-950: #f7f5ef;
+[data-theme="light"],
+[data-theme="system"] {
+  --night-950: #f6f4ee;
   --night-900: #ffffff;
-  --night-800: #e3e0d6;
-  --star-100: #0f1d17;
-  --star-400: #4a5a50;
+  --night-850: #edf5ef;
+  --night-800: #e2ded3;
+  --edge: #adbdb2;
+  --star-100: #10201a;
+  --star-300: #36443d;
+  --star-400: #56655d;
   --aurora-400: #0e7a55;
-  --aurora-600: #34d98c;
-  --gold-400: #f2c14e;
-  --ink-900: #f7f5ef;
+  --aurora-600: #0a6345;
+  --gold-400: #a37608;
+  --ink-900: #f6f4ee;
   --ember-300: #9f1239;
-  --ember-500: #e11d48;
+  --ember-500: #d0173f;
+  --eef-ring: transparent;
+  --shadow-soft: rgba(16, 32, 26, 0.08);
+  --shadow-strong: rgba(16, 32, 26, 0.14);
+  color-scheme: light;
 }
 
 [data-theme="dark"] {
-  --night-950: #06100c;
-  --night-900: #0b1a13;
-  --night-800: #16281f;
-  --star-100: #edf5ee;
-  --star-400: #8fa89a;
+  --night-950: #07120d;
+  --night-900: #0d1c15;
+  --night-850: #13261d;
+  --night-800: #1e3328;
+  --edge: #3d5c4c;
+  --star-100: #eef5ef;
+  --star-300: #c3d3c8;
+  --star-400: #96ad9f;
   --aurora-400: #34d98c;
   --aurora-600: #0e7a55;
   --gold-400: #f2c14e;
   --ink-900: #0f1d17;
   --ember-300: #fda4af;
   --ember-500: #e11d48;
+  --eef-ring: #34d98c;
+  --shadow-soft: rgba(0, 0, 0, 0.35);
+  --shadow-strong: rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+/* No saved choice: follow the OS. */
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    --night-950: #07120d;
+    --night-900: #0d1c15;
+    --night-850: #13261d;
+    --night-800: #1e3328;
+    --edge: #3d5c4c;
+    --star-100: #eef5ef;
+    --star-300: #c3d3c8;
+    --star-400: #96ad9f;
+    --aurora-400: #34d98c;
+    --aurora-600: #0e7a55;
+    --gold-400: #f2c14e;
+    --ink-900: #0f1d17;
+    --ember-300: #fda4af;
+    --ember-500: #e11d48;
+    --eef-ring: #34d98c;
+    --shadow-soft: rgba(0, 0, 0, 0.35);
+    --shadow-strong: rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
 }
 
 [data-foundation] {
@@ -290,8 +404,11 @@
 @theme inline {
   --color-night-950: var(--night-950);
   --color-night-900: var(--night-900);
+  --color-night-850: var(--night-850);
   --color-night-800: var(--night-800);
+  --color-edge: var(--edge);
   --color-star-100: var(--star-100);
+  --color-star-300: var(--star-300);
   --color-star-400: var(--star-400);
   --color-aurora-400: var(--aurora-400);
   --color-aurora-600: var(--aurora-600);
@@ -299,8 +416,125 @@
   --color-ink-900: var(--ink-900);
   --color-ember-300: var(--ember-300);
   --color-ember-500: var(--ember-500);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.canvas-grab,
+.canvas-grab .react-flow__pane {
+  cursor: grab;
+}
+
+.canvas-select,
+.canvas-select .react-flow__pane {
+  cursor: default;
+}
+
+.eef-handle {
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid var(--aurora-400);
+  background: var(--night-900);
+  transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+}
+
+.eef-glide .react-flow__node:not(.dragging) {
+  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .eef-glide .react-flow__node:not(.dragging) {
+    transition: none;
+  }
+}
+
+.react-flow__node .eef-handle {
+  opacity: 0;
+}
+.react-flow__node:hover .eef-handle,
+.react-flow__node.selected .eef-handle,
+.react-flow.connecting .eef-handle {
+  opacity: 1;
+}
+
+.eef-handle:hover {
+  transform: scale(1.35);
+  box-shadow: 0 0 10px color-mix(in oklab, var(--aurora-400) 70%, transparent);
+}
+
+.react-flow {
+  --xy-background-color: transparent;
+  --xy-edge-label-background-color: var(--night-900);
+}
+.react-flow .react-flow__controls {
+  overflow: hidden;
+  border: 1px solid var(--night-800);
+  border-radius: 0.875rem;
+  box-shadow: 0 12px 32px var(--shadow-soft);
+}
+.react-flow .react-flow__controls-button {
+  width: 32px;
+  height: 32px;
+  border-bottom: 1px solid var(--night-800);
+  background: var(--night-900);
+  color: var(--star-100);
+  fill: var(--star-100);
+}
+.react-flow .react-flow__controls-button:last-child {
+  border-bottom: 0;
+}
+.react-flow .react-flow__controls-button:hover {
+  background: var(--night-800);
+}
+.react-flow .react-flow__controls-button svg {
+  fill: currentColor;
+}
+.react-flow .react-flow__minimap {
+  overflow: hidden;
+  border: 1px solid var(--night-800);
+  border-radius: 0.875rem;
+  background: var(--night-900);
 }
 
 [data-travel-panel] {
@@ -309,6 +543,11 @@
 }
 [data-travel-panel]::-webkit-scrollbar {
   display: none;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--edge) transparent;
 }
 
 body {

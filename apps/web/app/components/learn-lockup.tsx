@@ -19,7 +19,7 @@ export function LearnLockup({
           </span>
         </span>
       ) : (
-        <span className="text-lg font-semibold leading-none tracking-tight">EEF Learn</span>
+        <span className="text-lg font-semibold leading-none tracking-tight whitespace-nowrap">EEF Learn</span>
       )}
     </span>
   );
