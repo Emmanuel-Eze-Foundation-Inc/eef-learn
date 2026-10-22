@@ -6,6 +6,29 @@ export const FOUNDATION_SITE = "emmanuelezefoundation.org";
 export const FOUNDER_NAME = "Emmanuel Eze";
 export const FOUNDER_PORTFOLIO = "https://emmanueleze.com";
 export const FOUNDER_PHOTO = "/foundation/emmanuel-eze.jpg";
+export const FOUNDATION_TEAM = [
+  {
+    name: "Orisha Brown",
+    role: "Treasurer",
+    location: "Maryland, USA",
+    photo: "/foundation/team/orisha-brown.jpg",
+    link: { network: "LinkedIn", href: "https://www.linkedin.com/in/orishabrown" },
+  },
+  {
+    name: "Heather Wallick",
+    role: "Secretary",
+    location: "Pennsylvania, USA",
+    photo: "/foundation/team/heather-wallick.jpg",
+    link: { network: "LinkedIn", href: "https://www.linkedin.com/in/heather-wallick-5256ab8a/" },
+  },
+  {
+    name: "Nancy Griffin",
+    role: "VP, Skill Training",
+    location: "Maryland, USA",
+    photo: "/foundation/team/nancy-griffin.jpg",
+    link: { network: "Facebook", href: "https://web.facebook.com/nancy.griffin.710" },
+  },
+] as const;
 export const PAGE_SHELL = "mx-auto w-full max-w-[1360px] px-5 md:px-8 lg:px-12";
 /** @deprecated use PAGE_SHELL */
 export const PAGE_GUTTER = PAGE_SHELL;

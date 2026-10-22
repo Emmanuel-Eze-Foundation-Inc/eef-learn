@@ -13,6 +13,7 @@ import {
   FOUNDATION_PHONE_HREF,
   FOUNDATION_SITE,
   FOUNDATION_SOCIALS,
+  FOUNDATION_TEAM,
   PAGE_SHELL,
 } from "@/lib/foundation";
 import type { FoundationPost } from "@/lib/foundation-feed";
@@ -455,6 +456,47 @@ export function FoundationHome({ maps, posts }: { maps: PublicMap[]; posts: Foun
             <UnseenEngineSponsor variant="official" />
           </div>
         </div>
+
+        <div className="min-w-0 border-t border-night-800 pt-12 lg:col-span-2">
+          <p className="font-mono text-xs tracking-[0.08em] text-gold-400 uppercase">The team</p>
+          <h3 className="mt-3 text-[22px] font-bold tracking-[-0.02em] sm:text-[26px]">
+            The people who keep it running.
+          </h3>
+          <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {FOUNDATION_TEAM.map((person) => {
+              const Icon = SOCIAL_ICONS[person.link.network];
+              return (
+                <li
+                  key={person.name}
+                  className="flex items-center gap-4 rounded-2xl border border-night-800 bg-night-900 p-4"
+                >
+                  <img
+                    src={person.photo}
+                    alt={person.name}
+                    width={320}
+                    height={320}
+                    loading="lazy"
+                    className="size-16 shrink-0 rounded-xl object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[16px] font-semibold text-star-100">{person.name}</p>
+                    <p className="text-[14px] text-star-300">{person.role}</p>
+                    <p className="text-[13px] text-star-400">{person.location}</p>
+                  </div>
+                  <a
+                    href={person.link.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`${person.name} on ${person.link.network}`}
+                    className="grid size-10 shrink-0 place-items-center rounded-full border border-night-800 text-star-300 transition-colors hover:border-star-300 hover:text-star-100"
+                  >
+                    <Icon className="size-4" aria-hidden />
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </section>
 
       <section id="involve" aria-labelledby="involve-heading" className="scroll-mt-24 border-t border-night-800 bg-night-900">
@@ -591,7 +633,7 @@ export function FoundationHome({ maps, posts }: { maps: PublicMap[]; posts: Foun
               Community maps
             </Link>
             <a className="hover:text-star-100" href="#founder">
-              Founder
+              Founder and team
             </a>
             <a className="hover:text-star-100" href="#involve">
               Get involved
